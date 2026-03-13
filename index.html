@@ -352,10 +352,10 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <div class="card">
     <div class="ch"><span class="ct">Portfolio Growth Projection</span></div>
     <div class="proj-controls">
-      <div class="cg"><div class="cg-lbl">Years</div><div class="cg-val"><span id="pYrs">20</span> yrs</div><input type="range" id="rYrs" min="1" max="40" value="20" oninput="document.getElementById('pYrs').textContent=this.value;buildProjection()"></div>
-      <div class="cg"><div class="cg-lbl">Monthly Contribution</div><div class="cg-val">$<span id="pCon">500</span></div><input type="range" id="rCon" min="0" max="5000" step="50" value="500" oninput="document.getElementById('pCon').textContent=Number(this.value).toLocaleString();buildProjection()"></div>
-      <div class="cg"><div class="cg-lbl">Price Growth / yr</div><div class="cg-val"><span id="pGr">5.0</span>%</div><input type="range" id="rGr" min="0" max="15" step="0.5" value="5" oninput="document.getElementById('pGr').textContent=parseFloat(this.value).toFixed(1);buildProjection()"></div>
-      <div class="cg"><div class="cg-lbl">Dividend Growth / yr</div><div class="cg-val"><span id="pDG">4.0</span>%</div><input type="range" id="rDG" min="0" max="15" step="0.5" value="4" oninput="document.getElementById('pDG').textContent=parseFloat(this.value).toFixed(1);buildProjection()"></div>
+      <div class="cg"><div class="cg-lbl">Years</div><div class="cg-val"><span id="pYrs">20</span> yrs</div><input type="range" id="rYrs" min="1" max="40" value="20" oninput="document.getElementById('pYrs').textContent=this.value;buildProjection();saveTabSettings()"></div>
+      <div class="cg"><div class="cg-lbl">Monthly Contribution</div><div class="cg-val">$<span id="pCon">500</span></div><input type="range" id="rCon" min="0" max="5000" step="50" value="500" oninput="document.getElementById('pCon').textContent=Number(this.value).toLocaleString();buildProjection();saveTabSettings()"></div>
+      <div class="cg"><div class="cg-lbl">Price Growth / yr</div><div class="cg-val"><span id="pGr">5.0</span>%</div><input type="range" id="rGr" min="0" max="15" step="0.5" value="5" oninput="document.getElementById('pGr').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveTabSettings()"></div>
+      <div class="cg"><div class="cg-lbl">Dividend Growth / yr</div><div class="cg-val"><span id="pDG">4.0</span>%</div><input type="range" id="rDG" min="0" max="15" step="0.5" value="4" oninput="document.getElementById('pDG').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveTabSettings()"></div>
     </div>
     <div style="padding:8px 16px;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);display:flex;gap:28px;flex-wrap:wrap;">
       <div class="toggle-row"><div class="tog on" id="dripTog" onclick="this.classList.toggle('on');buildProjection()"></div><span class="tog-label">DRIP (reinvest dividends)</span></div>
@@ -372,15 +372,15 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
     <div class="calc-lay">
       <div class="calc-l">
         <div class="cs-title">Income Calculator</div>
-        <div class="cr"><label>Investment Amount ($)</label><input type="number" id="ci1" value="10000" oninput="runCalc()"></div>
+        <div class="cr"><label>Investment Amount ($)</label><input type="number" id="ci1" oninput="runCalc();saveTabSettings()" value="10000" oninput="runCalc()"></div>
         <div class="cr"><label>Dividend Yield (%)</label><input type="number" id="ci2" step="0.01" oninput="runCalc()"></div>
-        <div class="cr"><label>Dividend Growth Rate (% / yr)</label><input type="number" id="ci3" value="4" step="0.1" oninput="runCalc()"></div>
-        <div class="cr"><label>Price Appreciation (% / yr)</label><input type="number" id="ci4" value="5" step="0.1" oninput="runCalc()"></div>
-        <div class="cr"><label>Time Horizon (years)</label><input type="number" id="ci5" value="10" oninput="runCalc()"></div>
+        <div class="cr"><label>Dividend Growth Rate (% / yr)</label><input type="number" id="ci3" oninput="runCalc();saveTabSettings()" value="4" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Price Appreciation (% / yr)</label><input type="number" id="ci4" oninput="runCalc();saveTabSettings()" value="5" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Time Horizon (years)</label><input type="number" id="ci5" oninput="runCalc();saveTabSettings()" value="10" oninput="runCalc()"></div>
         <div class="cr"><label>Payment Frequency</label>
-          <select id="ci6" onchange="runCalc()"><option value="12">Monthly</option><option value="4" selected>Quarterly</option><option value="2">Semi-Annual</option><option value="1">Annual</option></select>
+          <select id="ci6" onchange="runCalc();saveTabSettings()"><option value="12">Monthly</option><option value="4" selected>Quarterly</option><option value="2">Semi-Annual</option><option value="1">Annual</option></select>
         </div>
-        <div class="cr"><label>Extra Monthly Investment ($)</label><input type="number" id="ci7" value="0" oninput="runCalc()"></div>
+        <div class="cr"><label>Extra Monthly Investment ($)</label><input type="number" id="ci7" oninput="runCalc();saveTabSettings()" value="0" oninput="runCalc()"></div>
         <div class="toggle-row" style="margin-top:4px;">
           <div class="tog on" id="calcDrip" onclick="this.classList.toggle('on');runCalc()"></div>
           <span class="tog-label">DRIP (reinvest dividends)</span>
@@ -407,7 +407,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div class="tax-section">
           <div class="tax-section-title">Filing Status & Income</div>
           <div class="tax-row"><label>Filing Status</label>
-            <select id="txStatus" onchange="runTax()">
+            <select id="txStatus" onchange="runTax();saveTabSettings()">
               <option value="single">Single</option>
               <option value="mfj" selected>Married Filing Jointly</option>
               <option value="mfs">Married Filing Separately</option>
@@ -425,7 +425,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div class="tax-section">
           <div class="tax-section-title">Override Annual Dividend Income</div>
           <div class="tax-row"><label>Use portfolio total or custom amount</label>
-            <select id="txIncSrc" onchange="runTax()"><option value="portfolio">Use Portfolio Total</option><option value="custom">Custom Amount</option></select>
+            <select id="txIncSrc" onchange="runTax();saveTabSettings()"><option value="portfolio">Use Portfolio Total</option><option value="custom">Custom Amount</option></select>
           </div>
           <div class="tax-row" id="txCustomRow" style="display:none;"><label>Custom Annual Dividends ($)</label><input type="number" id="txCustom" value="1300" oninput="runTax()"></div>
         </div>
@@ -464,13 +464,13 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
       <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
         <div style="display:flex;flex-direction:column;gap:5px;">
           <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Amount to Invest ($)</label>
-          <input type="number" id="invAmount" value="1000" min="0" step="50"
+          <input type="number" id="invAmount" value="1000"  min="0" step="50"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--tx);font-family:var(--mono);font-size:22px;font-weight:600;padding:10px 14px;width:100%;outline:none;"
-            oninput="runInvest()">
+            oninput="runInvest();saveTabSettings()">
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;">
           <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Allocation Strategy</label>
-          <select id="invStrategy" onchange="runInvest()"
+          <select id="invStrategy" onchange="runInvest();saveTabSettings()"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--sans);font-size:13px;padding:9px 11px;outline:none;">
             <option value="equal">Equal Weight — split evenly across all holdings</option>
             <option value="current">Match Current Weights — maintain portfolio %</option>
@@ -1847,10 +1847,92 @@ function refreshAll(){
   savePortfolio();
 }
 
+
+// ══════════════════ TAB SETTINGS PERSISTENCE ══════════════════
+const SETTINGS_KEY = 'dividend_tab_settings_v1';
+
+function saveTabSettings(){
+  try{
+    const s = {
+      // Projection
+      projYears:  document.getElementById('rYrs')?.value,
+      projContrib:document.getElementById('rCon')?.value,
+      projGrowth: document.getElementById('rGr')?.value,
+      projDivGrow:document.getElementById('rDG')?.value,
+      projDrip:   document.getElementById('dripTog')?.classList.contains('on'),
+      projContribOn: document.getElementById('conTog')?.classList.contains('on'),
+      // Calculator
+      ci1: document.getElementById('ci1')?.value,
+      ci2: document.getElementById('ci2')?.value,
+      ci3: document.getElementById('ci3')?.value,
+      ci4: document.getElementById('ci4')?.value,
+      ci5: document.getElementById('ci5')?.value,
+      ci6: document.getElementById('ci6')?.value,
+      ci7: document.getElementById('ci7')?.value,
+      calcDrip: document.getElementById('calcDrip')?.classList.contains('on'),
+      // Tax
+      txStatus:  document.getElementById('txStatus')?.value,
+      txIncome:  document.getElementById('txIncome')?.value,
+      txState:   document.getElementById('txState')?.value,
+      txQual:    document.getElementById('txQual')?.value,
+      txROC:     document.getElementById('txROC')?.value,
+      txIncSrc:  document.getElementById('txIncSrc')?.value,
+      txCustom:  document.getElementById('txCustom')?.value,
+      // Invest
+      invAmount:   document.getElementById('invAmount')?.value,
+      invStrategy: document.getElementById('invStrategy')?.value,
+      invCustomPcts: customPcts,
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  }catch(e){}
+}
+
+function loadTabSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    const set = (id, val) => { const el = document.getElementById(id); if(el && val != null) el.value = val; };
+    const setToggle = (id, on) => { const el = document.getElementById(id); if(el && on != null){ if(on) el.classList.add('on'); else el.classList.remove('on'); } };
+
+    // Projection
+    if(s.projYears  != null){ set('rYrs', s.projYears);   document.getElementById('pYrs').textContent = s.projYears; }
+    if(s.projContrib!= null){ set('rCon', s.projContrib); document.getElementById('pCon').textContent = Number(s.projContrib).toLocaleString(); }
+    if(s.projGrowth != null){ set('rGr',  s.projGrowth);  document.getElementById('pGr').textContent  = parseFloat(s.projGrowth).toFixed(1); }
+    if(s.projDivGrow!= null){ set('rDG',  s.projDivGrow); document.getElementById('pDG').textContent  = parseFloat(s.projDivGrow).toFixed(1); }
+    setToggle('dripTog',  s.projDrip);
+    setToggle('conTog',   s.projContribOn);
+
+    // Calculator
+    set('ci1', s.ci1); set('ci2', s.ci2); set('ci3', s.ci3);
+    set('ci4', s.ci4); set('ci5', s.ci5); set('ci6', s.ci6); set('ci7', s.ci7);
+    setToggle('calcDrip', s.calcDrip);
+
+    // Tax
+    set('txStatus', s.txStatus); set('txIncome', s.txIncome);
+    set('txState',  s.txState);  set('txQual',   s.txQual);
+    set('txROC',    s.txROC);    set('txIncSrc', s.txIncSrc);
+    set('txCustom', s.txCustom);
+    if(s.txIncSrc === 'custom'){
+      const row = document.getElementById('txCustomRow');
+      if(row) row.style.display = '';
+    }
+
+    // Invest
+    set('invAmount',   s.invAmount);
+    set('invStrategy', s.invStrategy);
+    if(s.invCustomPcts) customPcts = s.invCustomPcts;
+  }catch(e){}
+}
+
+// Patch all tab-level functions to also save settings
+function _wrapWithSave(fn){ return function(){ fn.apply(this, arguments); saveTabSettings(); }; }
+
 // ══════════════════ INIT ══════════════════
 loadApiKey();
 loadStakeData();
 const didLoad = loadPortfolio();
+loadTabSettings();
 // Show last saved time in price bar if data was restored
 if(didLoad){
   try{
