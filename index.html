@@ -261,7 +261,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
     <a href="https://www.alphavantage.co/support/#api-key" target="_blank"
       style="font-size:11px;color:var(--bl);white-space:nowrap;text-decoration:none;">Get free key ↗</a>
   </div>
-  <span class="pb-status" id="priceStatus">KSWYMZVUOXTZH0BT</span>
+  <span class="pb-status" id="priceStatus">Enter your Alpha Vantage API key, then click Refresh Prices</span>
   <span class="pb-time" id="priceTime"></span>
 </div>
 
@@ -281,6 +281,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <button class="tb" onclick="showTab('projection',this)">Growth Projection</button>
   <button class="tb" onclick="showTab('calculator',this)">Calculator</button>
   <button class="tb" onclick="showTab('tax',this)">Tax Estimate</button>
+  <button class="tb" onclick="showTab('invest',this)">Invest $X</button>
 </div>
 
 <!-- ══════════ HOLDINGS TAB ══════════ -->
@@ -448,6 +449,101 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   </div>
 </div>
 
+
+<!-- ══════════ INVEST $X TAB ══════════ -->
+<div id="tab-invest" style="display:none;">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;margin-bottom:14px;">
+    <!-- LEFT: CONTROLS -->
+    <div class="card">
+      <div class="ch"><span class="ct">Investment Settings</span></div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Amount to Invest ($)</label>
+          <input type="number" id="invAmount" value="1000" min="0" step="50"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--tx);font-family:var(--mono);font-size:22px;font-weight:600;padding:10px 14px;width:100%;outline:none;"
+            oninput="runInvest()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Allocation Strategy</label>
+          <select id="invStrategy" onchange="runInvest()"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--sans);font-size:13px;padding:9px 11px;outline:none;">
+            <option value="equal">Equal Weight — split evenly across all holdings</option>
+            <option value="current">Match Current Weights — maintain portfolio %</option>
+            <option value="yield">Yield Weighted — favor higher dividend yield</option>
+            <option value="underweight">Rebalance to Target — boost underweight positions</option>
+            <option value="custom">Custom % — set your own allocation</option>
+          </select>
+        </div>
+        <div id="invTargetRow" style="display:none;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Target Equal Weight (%)</label>
+          <input type="number" id="invTarget" value="" readonly
+            style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r6);color:var(--tx2);font-family:var(--mono);font-size:13px;padding:8px 11px;width:100%;outline:none;">
+          <span style="font-size:10px;color:var(--tx3);">Shows how much each holding is under/over target weight</span>
+        </div>
+        <div id="invCustomNote" style="display:none;font-size:11px;color:var(--tx3);padding:8px;background:var(--s2);border-radius:var(--r6);">
+          Set custom % in the table on the right. Total must equal 100%.
+        </div>
+        <div style="border-top:1px solid var(--b1);padding-top:14px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--tx2);">Total Allocated</span>
+            <span id="invTotalAlloc" style="font-family:var(--mono);font-weight:600;color:var(--bl);">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--tx2);">Unallocated (cash leftover)</span>
+            <span id="invLeftover" style="font-family:var(--mono);color:var(--tx2);">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--tx2);">New Annual Dividend Income</span>
+            <span id="invNewDiv" style="font-family:var(--mono);font-weight:600;color:var(--am);">+$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--tx2);">New Monthly Income</span>
+            <span id="invNewMo" style="font-family:var(--mono);color:var(--am);">+$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--tx2);">New Portfolio Total</span>
+            <span id="invNewTotal" style="font-family:var(--mono);font-weight:600;color:var(--gr);">$0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- RIGHT: SUMMARY CARDS -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="invSummaryCards"></div>
+      <div class="card" style="flex:1;">
+        <div class="ch"><span class="ct">Before vs After Portfolio Yield</span></div>
+        <div style="padding:10px 14px;"><div style="position:relative;height:180px;"><canvas id="invYieldChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALLOCATION TABLE -->
+  <div class="card">
+    <div class="ch">
+      <span class="ct">Allocation Breakdown</span>
+      <span id="invCustomTotal" style="font-size:11px;font-family:var(--mono);"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th>
+          <th class="r">Symbol</th>
+          <th class="r">Current Price</th>
+          <th class="r">Current Weight</th>
+          <th class="r" id="invAllocHdr">Allocation %</th>
+          <th class="r">$ Amount</th>
+          <th class="r">Shares to Buy</th>
+          <th class="r">New Shares Total</th>
+          <th class="r">Div Yield</th>
+          <th class="r">Added Ann. Income</th>
+          <th class="r">Added Monthly</th>
+        </tr></thead>
+        <tbody id="invTbody"></tbody>
+      </table>
+    </div>
+    <div class="footer">Shares to buy are rounded down to whole shares (fractional share brokers may allow exact amounts). Leftover cash shown above.</div>
+  </div>
+</div>
 </div><!-- /app -->
 
 <!-- ══════════ ADD/EDIT MODAL ══════════ -->
@@ -1056,7 +1152,7 @@ function runTax(){
 }
 
 // ══════════════════ TAB SWITCHING ══════════════════
-const ALL_TABS=['holdings','calendar','projection','calculator','tax'];
+const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest'];
 function showTab(t,btn){
   ALL_TABS.forEach(id=>document.getElementById('tab-'+id).style.display='none');
   document.getElementById('tab-'+t).style.display='';
@@ -1079,6 +1175,150 @@ function refreshAll(){
   if(document.getElementById('tab-projection').style.display!=='none')buildProjection();
   if(document.getElementById('tab-calculator').style.display!=='none'){runCalc();buildQuickStats();}
   if(document.getElementById('tab-tax').style.display!=='none')runTax();
+  if(document.getElementById('tab-invest').style.display!=='none')runInvest();
+}
+
+
+// ══════════════════ INVEST $X ══════════════════
+let invYieldCh = null;
+let customPcts = {};
+
+function runInvest(){
+  const amount = parseFloat(document.getElementById('invAmount').value) || 0;
+  const strategy = document.getElementById('invStrategy').value;
+  const te = stocks.reduce((a,s) => a + s.equity, 0);
+
+  document.getElementById('invTargetRow').style.display = strategy === 'underweight' ? 'flex' : 'none';
+  document.getElementById('invCustomNote').style.display = strategy === 'custom' ? 'block' : 'none';
+  document.getElementById('invAllocHdr').textContent = strategy === 'custom' ? 'Custom % (edit)' : 'Allocation %';
+
+  if(strategy === 'underweight'){
+    const target = (100 / stocks.length).toFixed(2);
+    document.getElementById('invTarget').value = target + '%';
+  }
+
+  // Calculate allocation percentages per strategy
+  let pcts = {};
+  if(strategy === 'equal'){
+    stocks.forEach(s => pcts[s.id] = 100 / stocks.length);
+  } else if(strategy === 'current'){
+    stocks.forEach(s => pcts[s.id] = te > 0 ? (s.equity / te * 100) : (100 / stocks.length));
+  } else if(strategy === 'yield'){
+    const totalYield = stocks.reduce((a,s) => a + s.yield, 0);
+    stocks.forEach(s => pcts[s.id] = totalYield > 0 ? (s.yield / totalYield * 100) : (100 / stocks.length));
+  } else if(strategy === 'underweight'){
+    const target = 100 / stocks.length;
+    // Allocate proportionally to how underweight each position is
+    const gaps = stocks.map(s => ({ id: s.id, gap: Math.max(0, target - (te > 0 ? s.equity / te * 100 : 0)) }));
+    const totalGap = gaps.reduce((a,g) => a + g.gap, 0);
+    if(totalGap === 0){
+      stocks.forEach(s => pcts[s.id] = 100 / stocks.length);
+    } else {
+      gaps.forEach(g => pcts[g.id] = g.gap / totalGap * 100);
+    }
+  } else if(strategy === 'custom'){
+    // init custom pcts if needed
+    stocks.forEach(s => {
+      if(customPcts[s.id] === undefined) customPcts[s.id] = parseFloat((100 / stocks.length).toFixed(1));
+    });
+    pcts = {...customPcts};
+  }
+
+  // Normalise to exactly 100
+  const total = Object.values(pcts).reduce((a,v) => a + v, 0);
+  if(total > 0) stocks.forEach(s => pcts[s.id] = pcts[s.id] / total * 100);
+
+  // Dollar amounts (floor to whole shares, track leftover)
+  let totalAllocated = 0, addedDiv = 0;
+  const rows = stocks.map(s => {
+    const pct = pcts[s.id] || 0;
+    const dollars = amount * pct / 100;
+    const sharesToBuy = s.price > 0 ? Math.floor(dollars / s.price) : 0;
+    const actualSpent = sharesToBuy * s.price;
+    const addedAnnDiv = actualSpent * (s.yield / 100);
+    totalAllocated += actualSpent;
+    addedDiv += addedAnnDiv;
+    return { s, pct, dollars, sharesToBuy, actualSpent, addedAnnDiv };
+  });
+
+  const leftover = amount - totalAllocated;
+  const curDiv = stocks.reduce((a,s) => a + s.annDiv, 0);
+  const newTotal = te + totalAllocated;
+  const newYield = newTotal > 0 ? ((curDiv + addedDiv) / newTotal * 100) : 0;
+  const curYield = te > 0 ? (curDiv / te * 100) : 0;
+
+  // Update summary
+  document.getElementById('invTotalAlloc').textContent = fmt(totalAllocated);
+  document.getElementById('invLeftover').textContent = fmt(leftover);
+  document.getElementById('invNewDiv').textContent = '+' + fmt(addedDiv);
+  document.getElementById('invNewMo').textContent = '+' + fmt(addedDiv / 12);
+  document.getElementById('invNewTotal').textContent = fmt(newTotal, 0);
+
+  // Summary cards
+  document.getElementById('invSummaryCards').innerHTML = [
+    {v: fmt(amount, 0), l: 'Investment Amount', c: 'var(--bl)'},
+    {v: '+' + fmt(addedDiv), l: 'Added Annual Income', c: 'var(--am)'},
+    {v: newYield.toFixed(2) + '%', l: 'New Portfolio Yield', c: newYield >= curYield ? 'var(--gr)' : 'var(--rd)'},
+  ].map(i => `<div class="mc a1" style="margin:0"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c}">${i.v}</div></div>`).join('');
+
+  // Yield comparison chart
+  if(invYieldCh) invYieldCh.destroy();
+  const sortedForChart = [...rows].sort((a,b) => b.s.yield - a.s.yield);
+  invYieldCh = new Chart(document.getElementById('invYieldChart'), {
+    type: 'bar',
+    data: {
+      labels: sortedForChart.map(r => r.s.symbol),
+      datasets: [
+        {label: 'Current Yield %', data: sortedForChart.map(r => +r.s.yield.toFixed(2)), backgroundColor: '#3b9eff88', borderRadius: 3, borderSkipped: false},
+        {label: 'Added Income Yield', data: sortedForChart.map(r => r.actualSpent > 0 ? +(r.s.yield).toFixed(2) : 0), backgroundColor: '#f5a62388', borderRadius: 3, borderSkipped: false},
+      ]
+    },
+    options: {responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}, tooltip: {callbacks: {label: c => ` ${c.dataset.label}: ${c.raw}%`}}},
+      scales: {
+        x: {ticks: {color: '#4d555f', font: {family: "'DM Mono',monospace", size: 10}}, grid: {display: false}, border: {display: false}},
+        y: {ticks: {color: '#4d555f', font: {family: "'DM Mono',monospace", size: 10}, callback: v => v + '%'}, grid: {color: 'rgba(255,255,255,0.04)'}, border: {display: false}}
+      }
+    }
+  });
+
+  // Custom pct total indicator
+  if(strategy === 'custom'){
+    const customSum = Object.values(customPcts).reduce((a,v) => a + v, 0);
+    const diff = customSum - 100;
+    const el = document.getElementById('invCustomTotal');
+    el.textContent = 'Total: ' + customSum.toFixed(1) + '%' + (Math.abs(diff) > 0.1 ? (diff > 0 ? ' (over by ' + diff.toFixed(1) + '%)' : ' (under by ' + Math.abs(diff).toFixed(1) + '%)') : ' ✓');
+    el.style.color = Math.abs(diff) > 0.1 ? 'var(--rd)' : 'var(--gr)';
+  } else {
+    document.getElementById('invCustomTotal').textContent = '';
+  }
+
+  // Render table
+  const maxDollars = Math.max(...rows.map(r => r.dollars), 1);
+  document.getElementById('invTbody').innerHTML = [...rows].sort((a,b) => b.dollars - a.dollars).map(r => {
+    const barW = (r.dollars / maxDollars * 100).toFixed(1);
+    const pctCell = strategy === 'custom'
+      ? `<div class="yi" style="justify-content:flex-end"><input type="number" value="${(customPcts[r.s.id]||0).toFixed(1)}" step="0.1" min="0" max="100"
+           style="width:60px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--bl);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
+           onchange="customPcts[${r.s.id}]=parseFloat(this.value)||0;runInvest()"></div>`
+      : `<span class="num neu">${r.pct.toFixed(1)}%</span>`;
+    return `<tr>
+      <td><div class="sn" title="${r.s.name}">${r.s.name}</div></td>
+      <td class="r"><span class="sym-b">${r.s.symbol}</span></td>
+      <td class="r num neu">$${r.s.price.toFixed(2)}</td>
+      <td class="r num neu">${(te > 0 ? r.s.equity / te * 100 : 0).toFixed(1)}%</td>
+      <td class="r">${pctCell}</td>
+      <td class="r" style="display:flex;align-items:center;justify-content:flex-end">
+        <span class="num" style="color:var(--bl)">${fmt(r.dollars)}</span>
+        <span class="eq-bar"><span class="eq-bar-fill" style="width:${barW}%;background:var(--bl)"></span></span>
+      </td>
+      <td class="r num" style="color:${r.sharesToBuy > 0 ? 'var(--gr)' : 'var(--tx3)'}">${r.sharesToBuy > 0 ? '+' + r.sharesToBuy : '—'}</td>
+      <td class="r num neu">${r.sharesToBuy > 0 ? (r.s.shares + r.sharesToBuy).toFixed(3) : fmtN(r.s.shares)}</td>
+      <td class="r num" style="color:${r.s.yield >= 6 ? 'var(--am)' : r.s.yield >= 3 ? 'var(--tl)' : 'var(--tx2)'}">${r.s.yield.toFixed(1)}%</td>
+      <td class="r num" style="color:var(--am)">${r.addedAnnDiv > 0 ? '+' + fmt(r.addedAnnDiv) : '—'}</td>
+      <td class="r num" style="color:var(--tx2)">${r.addedAnnDiv > 0 ? '+' + fmt(r.addedAnnDiv / 12) : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ══════════════════ BALANCE VISIBILITY ══════════════════
