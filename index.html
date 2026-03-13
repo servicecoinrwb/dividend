@@ -699,28 +699,29 @@ document.getElementById('fFreq')?.addEventListener('change',function(){
 
 // ══════════════════ LIVE PRICES ══════════════════
 async function fetchPrice(symbol){
-  const urls=[
-    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
-    `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`
-  ];
-  for(const url of urls){
-    try{
-      const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});
-      if(!r.ok)continue;
-      const d=await r.json();
-      const meta=d?.chart?.result?.[0]?.meta;
-      if(meta?.regularMarketPrice) return meta.regularMarketPrice;
-    }catch(e){}
-  }
-  // Try cors proxy
+  const yahooV8 = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+  const yahooV7 = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+  const ao = s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`;
+  const tp = s => `https://thingproxy.freeboard.io/fetch/${s}`;
+
+  // Try allorigins with v8
   try{
-    const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`);
-    if(r.ok){
-      const d=await r.json();
-      const meta=d?.chart?.result?.[0]?.meta;
-      if(meta?.regularMarketPrice) return meta.regularMarketPrice;
-    }
+    const r=await fetch(ao(yahooV8));
+    if(r.ok){ const d=await r.json(); const p=d?.chart?.result?.[0]?.meta?.regularMarketPrice; if(p) return p; }
   }catch(e){}
+
+  // Try allorigins with v7 quote endpoint
+  try{
+    const r=await fetch(ao(yahooV7));
+    if(r.ok){ const d=await r.json(); const p=d?.quoteResponse?.result?.[0]?.regularMarketPrice; if(p) return p; }
+  }catch(e){}
+
+  // Try thingproxy fallback
+  try{
+    const r=await fetch(tp(yahooV8));
+    if(r.ok){ const d=await r.json(); const p=d?.chart?.result?.[0]?.meta?.regularMarketPrice; if(p) return p; }
+  }catch(e){}
+
   return null;
 }
 
