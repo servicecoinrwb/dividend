@@ -263,6 +263,8 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   </div>
   <span class="pb-status" id="priceStatus">Enter your Alpha Vantage API key, then click Refresh Prices</span>
   <span class="pb-time" id="priceTime"></span>
+  <button onclick="exportData()" title="Export all portfolio data as JSON backup" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx2);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--gr)';this.style.borderColor='var(--gr)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--b2)'">⬇ Export</button>
+  <label title="Import a previously exported JSON backup" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx2);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='var(--bl)';this.style.borderColor='var(--bl)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--b2)'">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
   <button onclick="resetPortfolio()" title="Reset to original data" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx3);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='var(--rd)';this.style.borderColor='var(--rd)'" onmouseout="this.style.color='var(--tx3)';this.style.borderColor='var(--b2)'">↺ Reset</button>
 </div>
 
@@ -1494,7 +1496,16 @@ function saveStakeData(){
 function loadStakeData(){
   try{
     const raw = localStorage.getItem(STAKE_KEY);
-    if(raw){ const d=JSON.parse(raw); if(d?.positions?.length){ stakePositions=d.positions; nextStakeId=d.nextStakeId||10; return; } }
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d?.positions && d.positions.length > 0){
+        stakePositions = d.positions;
+        nextStakeId = d.nextStakeId || (Math.max(...d.positions.map(s=>s.id||0)) + 1);
+        return;
+      }
+    }
+    // No saved data — save the defaults so they persist on next load
+    saveStakeData();
   }catch(e){}
 }
 
@@ -1736,6 +1747,53 @@ function toggleValuesVisible(){
   btn.style.color = valuesVisible ? 'var(--tx2)' : 'var(--bl)';
 }
 
+// ══════════════════ EXPORT / IMPORT ══════════════════
+function exportData(){
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    version: 'v3',
+    portfolio: JSON.parse(localStorage.getItem('dividend_portfolio_v1') || '{}'),
+    staking:   JSON.parse(localStorage.getItem('dividend_staking_v1')   || '{}'),
+    fund:      JSON.parse(localStorage.getItem('fund_settings_v1')      || '{}'),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href     = url;
+  a.download = `dividend-portfolio-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showSaveToast('✓ Portfolio exported');
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const d = JSON.parse(e.target.result);
+      // Support both direct dump format and wrapped export format
+      const portfolio = d.portfolio || d;
+      const staking   = d.staking   || null;
+      const fund      = d.fund      || null;
+      if(!portfolio?.stocks?.length && !staking?.positions?.length)
+        throw new Error('No recognizable portfolio data found in file.');
+      if(!confirm(`Import portfolio from ${d.exportedAt ? new Date(d.exportedAt).toLocaleString() : 'backup'}? This will replace your current data.`)) return;
+      if(portfolio?.stocks?.length) localStorage.setItem('dividend_portfolio_v1', JSON.stringify(portfolio));
+      if(staking?.positions?.length) localStorage.setItem('dividend_staking_v1', JSON.stringify(staking));
+      if(fund && Object.keys(fund).length) localStorage.setItem('fund_settings_v1', JSON.stringify(fund));
+      showSaveToast('✓ Import successful — reloading…');
+      setTimeout(() => location.reload(), 1200);
+    } catch(err){
+      alert('Import failed: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset input so same file can be re-imported
+}
+
 // ══════════════════ PERSISTENCE ══════════════════
 const STORAGE_KEY = 'dividend_portfolio_v1';
 
@@ -1771,12 +1829,12 @@ function resetPortfolio(){
   location.reload();
 }
 
-function showSaveToast(){
+function showSaveToast(msg){
   let t = document.getElementById('saveToast');
   if(!t){ t = document.createElement('div'); t.id='saveToast';
     t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;padding:10px 18px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;';
     document.body.appendChild(t); }
-  t.textContent = '✓ Portfolio saved';
+  t.textContent = msg || '✓ Portfolio saved';
   t.style.opacity = '1';
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.style.opacity='0', 2000);
@@ -1810,6 +1868,7 @@ renderHoldings();
 buildDonut();
 buildBar();
 seedCalcYield();
+renderStaking();
 </script>
 </body>
 </html>
