@@ -283,6 +283,8 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <button class="tb" onclick="showTab('calculator',this)">Calculator</button>
   <button class="tb" onclick="showTab('tax',this)">Tax Estimate</button>
   <button class="tb" onclick="showTab('invest',this)">Invest $X</button>
+  <button class="tb" onclick="showTab('staking',this)">Staking / DeFi</button>
+  <button class="tb" onclick="showTab('fund',this)">Fund View</button>
 </div>
 
 <!-- ══════════ HOLDINGS TAB ══════════ -->
@@ -543,6 +545,157 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
       </table>
     </div>
     <div class="footer">Shares to buy are rounded down to whole shares (fractional share brokers may allow exact amounts). Leftover cash shown above.</div>
+  </div>
+</div>
+
+<!-- ══════════ STAKING / DEFI TAB ══════════ -->
+<div id="tab-staking" style="display:none;">
+  <!-- Summary metrics -->
+  <div class="metrics" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;" id="stakingSummary"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;" id="stakingCards"></div>
+
+  <!-- Positions table -->
+  <div class="card">
+    <div class="ch">
+      <span class="ct">Staking Positions</span>
+      <button class="btn btn-green btn-sm" onclick="openStakeModal()">+ Add Position</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Protocol</th><th class="r">Token</th><th class="r">Amount</th>
+          <th class="r">USD Value</th><th class="r">APY</th>
+          <th class="r">Weekly Income</th><th class="r">Annual Income</th>
+          <th class="r">Pending Rewards</th><th class="r">Epoch / Cycle</th>
+          <th class="r">Actions</th>
+        </tr></thead>
+        <tbody id="stakeTbody"></tbody>
+      </table>
+    </div>
+    <div class="footer">USD values are manual — crypto prices fluctuate. Update regularly for accurate totals.</div>
+  </div>
+</div>
+
+<!-- ══════════ FUND VIEW TAB ══════════ -->
+<div id="tab-fund" style="display:none;">
+  <!-- Fund header -->
+  <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);padding:20px 24px;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;">
+      <div>
+        <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px;">Fund Name</div>
+        <input id="fundName" type="text" value="My Dividend &amp; Yield Fund"
+          style="background:transparent;border:none;border-bottom:1px solid var(--b2);color:var(--tx);font-family:var(--sans);font-size:22px;font-weight:600;width:360px;outline:none;padding-bottom:3px;"
+          oninput="saveFundSettings()">
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-width:400px;" id="fundKPIs"></div>
+    </div>
+  </div>
+
+  <!-- NAV settings + AUM breakdown -->
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:14px;margin-bottom:14px;">
+    <div class="card">
+      <div class="ch"><span class="ct">NAV Settings</span></div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Total Shares / Units Issued</label>
+          <input type="number" id="fundShares" value="1000" min="1"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:16px;padding:8px 10px;outline:none;"
+            oninput="saveFundSettings();buildFund()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Benchmark Name</label>
+          <input type="text" id="fundBenchmark" value="S&amp;P 500 (SPY ~5%)"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none;"
+            oninput="saveFundSettings()">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Benchmark Yield (%)</label>
+          <input type="number" id="fundBenchYield" value="1.3" step="0.1"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:14px;padding:8px 10px;outline:none;"
+            oninput="saveFundSettings();buildFund()">
+        </div>
+        <div style="border-top:1px solid var(--b1);padding-top:10px;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px;">Fund Inception</div>
+          <input type="date" id="fundInception"
+            style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;width:100%;"
+            oninput="saveFundSettings();buildFund()">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <!-- AUM donut -->
+      <div class="card" style="flex:1;">
+        <div class="ch"><span class="ct">AUM Breakdown — Stocks vs Staking</span></div>
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:0;">
+          <div style="padding:12px 14px;"><div style="position:relative;height:175px;"><canvas id="fundDonut"></canvas></div></div>
+          <div style="padding:14px 16px;" id="fundAssetList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Income breakdown -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+    <div class="card">
+      <div class="ch"><span class="ct">Annual Income Sources</span></div>
+      <div style="padding:10px 14px;"><div style="position:relative;height:200px;"><canvas id="fundIncomeBar"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Fund Metrics vs Benchmark</span></div>
+      <div style="padding:16px 18px;" id="fundMetricsTable"></div>
+    </div>
+  </div>
+
+  <!-- Holdings registry -->
+  <div class="card">
+    <div class="ch"><span class="ct">Full Portfolio Registry</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th class="r">Type</th><th class="r">Value</th>
+          <th class="r">% of AUM</th><th class="r">Annual Income</th><th class="r">Yield</th><th class="r">Income % of Total</th>
+        </tr></thead>
+        <tbody id="fundRegistry"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STAKING MODAL -->
+<div class="modal-overlay" id="stakeModalOverlay" onclick="if(event.target===this)closeStakeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="stakeModalTitle">Add Staking Position</span>
+      <button class="modal-close" onclick="closeStakeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg full"><label>Protocol Name</label><input type="text" id="sfProto" placeholder="e.g. Camelot, Pendle, Cypher"></div>
+        <div class="fg"><label>Token Symbol</label><input type="text" id="sfToken" placeholder="xGRAIL"></div>
+        <div class="fg"><label>Token Amount</label><input type="number" id="sfAmount" placeholder="0" step="any"></div>
+        <div class="fg"><label>USD Value ($)</label><input type="number" id="sfUSD" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>APY (%)</label><input type="number" id="sfAPY" placeholder="0.0" step="0.1"></div>
+        <div class="fg"><label>Epoch / Cycle</label>
+          <select id="sfCycle">
+            <option value="weekly">Weekly</option>
+            <option value="daily">Daily</option>
+            <option value="monthly">Monthly</option>
+            <option value="continuous">Continuous</option>
+          </select>
+        </div>
+        <div class="fg"><label>Pending Rewards ($)</label><input type="number" id="sfPending" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Staking Share (%)</label><input type="number" id="sfShare" placeholder="0.00" step="0.001"></div>
+        <div class="fg full"><label>Reward Tokens (comma separated)</label><input type="text" id="sfRewards" placeholder="GRAIL, xGRAIL, ETH"></div>
+        <div class="fg full"><label>Notes</label><input type="text" id="sfNotes" placeholder="Optional — lock period, chain, etc."></div>
+      </div>
+      <div id="stakePreview" style="margin-top:14px;padding:10px;background:var(--s2);border-radius:var(--r8);font-size:12px;color:var(--tx2);"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeStakeModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="saveStake()">Save Position</button>
+    </div>
   </div>
 </div>
 </div><!-- /app -->
@@ -1153,7 +1306,7 @@ function runTax(){
 }
 
 // ══════════════════ TAB SWITCHING ══════════════════
-const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest'];
+const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest','staking','fund'];
 function showTab(t,btn){
   ALL_TABS.forEach(id=>document.getElementById('tab-'+id).style.display='none');
   document.getElementById('tab-'+t).style.display='';
@@ -1177,6 +1330,8 @@ function refreshAll(){
   if(document.getElementById('tab-calculator').style.display!=='none'){runCalc();buildQuickStats();}
   if(document.getElementById('tab-tax').style.display!=='none')runTax();
   if(document.getElementById('tab-invest').style.display!=='none')runInvest();
+  if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
+  if(document.getElementById('tab-fund').style.display!=='none'){loadFundSettings();buildFund();}
 }
 
 
@@ -1322,6 +1477,253 @@ function runInvest(){
   }).join('');
 }
 
+
+// ══════════════════ STAKING / DEFI ══════════════════
+const STAKE_KEY = 'dividend_staking_v1';
+let stakePositions = [
+  {id:1, proto:'Camelot', token:'xGRAIL', amount:69.416, usd:5200, apy:19.3, cycle:'weekly', pending:6.48, share:0.63, rewards:'GRAIL, xGRAIL', notes:'Arbitrum — 0.5% dealloc fee'},
+  {id:2, proto:'Cypher', token:'xCYPH', amount:35989.817, usd:159, apy:91.77, cycle:'weekly', pending:2.18, share:0.1, rewards:'CYPH', notes:'Current epoch: 430k CYPH ($2,766)'},
+  {id:3, proto:'Pendle', token:'sPENDLE', amount:2394.38, usd:1800, apy:22, cycle:'weekly', pending:0, share:0, rewards:'PENDLE', notes:'6.34 staked + 2,388 virtual vePENDLE. All-time: $1,140.85'},
+];
+let nextStakeId = 4;
+let stakeEditId = null;
+
+function saveStakeData(){
+  try{ localStorage.setItem(STAKE_KEY, JSON.stringify({positions:stakePositions, nextStakeId})); }catch(e){}
+}
+function loadStakeData(){
+  try{
+    const raw = localStorage.getItem(STAKE_KEY);
+    if(raw){ const d=JSON.parse(raw); if(d?.positions?.length){ stakePositions=d.positions; nextStakeId=d.nextStakeId||10; return; } }
+  }catch(e){}
+}
+
+function stakeAnnualIncome(s){ return s.usd * (s.apy/100); }
+function stakeWeeklyIncome(s){ const ann=stakeAnnualIncome(s); return s.cycle==='daily'?ann/365:s.cycle==='monthly'?ann/12:s.cycle==='weekly'?ann/52:ann/365; }
+
+function renderStaking(){
+  const totalUSD = stakePositions.reduce((a,s)=>a+s.usd,0);
+  const totalAnn = stakePositions.reduce((a,s)=>a+stakeAnnualIncome(s),0);
+  const totalPend = stakePositions.reduce((a,s)=>a+(s.pending||0),0);
+  const blendedAPY = totalUSD>0?(totalAnn/totalUSD*100):0;
+
+  document.getElementById('stakingSummary').innerHTML = [
+    {v:fmt(totalUSD,0), l:'Total Staked Value', c:'var(--bl)', a:'a1'},
+    {v:fmt(totalAnn,0), l:'Annual Staking Income', c:'var(--am)', a:'a3'},
+    {v:blendedAPY.toFixed(1)+'%', l:'Blended APY', c:'var(--gr)', a:'a2'},
+    {v:fmt(totalPend), l:'Pending Rewards', c:'var(--tl)', a:'a4'},
+  ].map(i=>`<div class="mc ${i.a}" style="margin:0"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c}">${i.v}</div></div>`).join('');
+
+  // Cards per position
+  const PCOLS = ['#f5a623','#9b59b6','#1abc9c','#3b9eff','#e74c3c'];
+  document.getElementById('stakingCards').innerHTML = stakePositions.map((s,i)=>{
+    const ann = stakeAnnualIncome(s);
+    const wk = stakeWeeklyIncome(s);
+    const col = PCOLS[i%PCOLS.length];
+    return `<div class="card" style="margin:0;border-top:3px solid ${col}">
+      <div class="ch" style="border:none;padding-bottom:6px;">
+        <span class="ct" style="color:${col}">${s.proto}</span>
+        <span class="sym-b">${s.token}</span>
+      </div>
+      <div style="padding:6px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Amount</div><div style="font-family:var(--mono);font-size:13px;font-weight:500;">${s.amount.toLocaleString()}</div></div>
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">USD Value</div><div style="font-family:var(--mono);font-size:13px;font-weight:500;color:var(--bl)">${fmt(s.usd)}</div></div>
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">APY</div><div style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--gr)">${s.apy.toFixed(2)}%</div></div>
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">${s.cycle.charAt(0).toUpperCase()+s.cycle.slice(1)} Income</div><div style="font-family:var(--mono);font-size:13px;color:var(--am)">${fmt(wk)}</div></div>
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Annual Income</div><div style="font-family:var(--mono);font-size:13px;color:var(--am)">${fmt(ann)}</div></div>
+        <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Pending</div><div style="font-family:var(--mono);font-size:13px;color:var(--tl)">${fmt(s.pending)}</div></div>
+        ${s.share?`<div style="grid-column:1/-1"><div style="font-size:10px;color:var(--tx3);margin-bottom:2px;">Pool Share</div><div style="font-family:var(--mono);font-size:12px;color:var(--tx2)">${s.share}%</div></div>`:''}
+        ${s.notes?`<div style="grid-column:1/-1;font-size:10px;color:var(--tx3);padding-top:4px;border-top:1px solid var(--b1)">${s.notes}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Table
+  document.getElementById('stakeTbody').innerHTML = stakePositions.map(s=>{
+    const ann=stakeAnnualIncome(s), wk=stakeWeeklyIncome(s);
+    return `<tr>
+      <td><span style="font-weight:500">${s.proto}</span></td>
+      <td class="r"><span class="sym-b" style="background:var(--am-d);color:var(--am)">${s.token}</span></td>
+      <td class="r num neu">${s.amount.toLocaleString()}</td>
+      <td class="r"><div class="yi"><input type="number" value="${s.usd.toFixed(2)}" step="0.01" min="0"
+        style="width:80px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--bl);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
+        onchange="stakePositions.find(x=>x.id===${s.id}).usd=parseFloat(this.value)||0;renderStaking();saveStakeData();buildFund&&buildFund();"></div></td>
+      <td class="r"><div class="yi"><input type="number" value="${s.apy.toFixed(2)}" step="0.1" min="0"
+        style="width:60px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--gr);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
+        onchange="stakePositions.find(x=>x.id===${s.id}).apy=parseFloat(this.value)||0;renderStaking();saveStakeData();"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+      <td class="r num" style="color:var(--am)">${fmt(wk)}</td>
+      <td class="r num" style="color:var(--am)">${fmt(ann)}</td>
+      <td class="r num" style="color:var(--tl)">${fmt(s.pending)}</td>
+      <td class="r num neu" style="font-size:11px">${s.cycle}</td>
+      <td class="r" style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="openStakeModal(${s.id})">✏ Edit</button>
+        <button class="btn btn-red btn-sm" onclick="removeStake(${s.id})" style="margin-left:4px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openStakeModal(id=null){
+  stakeEditId=id;
+  document.getElementById('stakeModalOverlay').classList.add('open');
+  document.getElementById('stakeModalTitle').textContent=id?'Edit Position':'Add Position';
+  if(id){
+    const s=stakePositions.find(x=>x.id===id);
+    document.getElementById('sfProto').value=s.proto;
+    document.getElementById('sfToken').value=s.token;
+    document.getElementById('sfAmount').value=s.amount;
+    document.getElementById('sfUSD').value=s.usd;
+    document.getElementById('sfAPY').value=s.apy;
+    document.getElementById('sfCycle').value=s.cycle;
+    document.getElementById('sfPending').value=s.pending;
+    document.getElementById('sfShare').value=s.share;
+    document.getElementById('sfRewards').value=s.rewards;
+    document.getElementById('sfNotes').value=s.notes;
+  } else {
+    ['sfProto','sfToken','sfAmount','sfUSD','sfAPY','sfPending','sfShare','sfRewards','sfNotes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('sfCycle').value='weekly';
+    document.getElementById('stakePreview').innerHTML='';
+  }
+}
+function closeStakeModal(){ document.getElementById('stakeModalOverlay').classList.remove('open'); stakeEditId=null; }
+function removeStake(id){ if(!confirm('Remove this staking position?'))return; stakePositions=stakePositions.filter(x=>x.id!==id); saveStakeData(); renderStaking(); }
+function saveStake(){
+  const proto=document.getElementById('sfProto').value.trim();
+  const token=document.getElementById('sfToken').value.trim().toUpperCase();
+  const amount=parseFloat(document.getElementById('sfAmount').value)||0;
+  const usd=parseFloat(document.getElementById('sfUSD').value)||0;
+  const apy=parseFloat(document.getElementById('sfAPY').value)||0;
+  const cycle=document.getElementById('sfCycle').value;
+  const pending=parseFloat(document.getElementById('sfPending').value)||0;
+  const share=parseFloat(document.getElementById('sfShare').value)||0;
+  const rewards=document.getElementById('sfRewards').value.trim();
+  const notes=document.getElementById('sfNotes').value.trim();
+  if(!proto||!token) return alert('Protocol and token are required.');
+  if(stakeEditId){ Object.assign(stakePositions.find(x=>x.id===stakeEditId),{proto,token,amount,usd,apy,cycle,pending,share,rewards,notes}); }
+  else { stakePositions.push({id:nextStakeId++,proto,token,amount,usd,apy,cycle,pending,share,rewards,notes}); }
+  closeStakeModal(); saveStakeData(); renderStaking();
+}
+
+// ══════════════════ FUND VIEW ══════════════════
+let fundDonutCh, fundIncomeBarCh;
+
+function loadFundSettings(){
+  try{
+    const raw=localStorage.getItem('fund_settings_v1');
+    if(raw){
+      const d=JSON.parse(raw);
+      if(d.name) document.getElementById('fundName').value=d.name;
+      if(d.shares) document.getElementById('fundShares').value=d.shares;
+      if(d.benchmark) document.getElementById('fundBenchmark').value=d.benchmark;
+      if(d.benchYield) document.getElementById('fundBenchYield').value=d.benchYield;
+      if(d.inception) document.getElementById('fundInception').value=d.inception;
+    }
+  }catch(e){}
+}
+function saveFundSettings(){
+  try{
+    localStorage.setItem('fund_settings_v1', JSON.stringify({
+      name: document.getElementById('fundName').value,
+      shares: document.getElementById('fundShares').value,
+      benchmark: document.getElementById('fundBenchmark').value,
+      benchYield: document.getElementById('fundBenchYield').value,
+      inception: document.getElementById('fundInception').value,
+    }));
+  }catch(e){}
+}
+
+function buildFund(){
+  loadFundSettings();
+  const stockAUM = stocks.reduce((a,s)=>a+s.equity,0);
+  const stakeAUM = stakePositions.reduce((a,s)=>a+s.usd,0);
+  const totalAUM = stockAUM + stakeAUM;
+  const stockInc = stocks.reduce((a,s)=>a+s.annDiv,0);
+  const stakeInc = stakePositions.reduce((a,s)=>a+stakeAnnualIncome(s),0);
+  const totalInc = stockInc + stakeInc;
+  const totalShares = parseFloat(document.getElementById('fundShares').value)||1000;
+  const NAV = totalAUM / totalShares;
+  const incPerShare = totalInc / totalShares;
+  const fundYield = totalAUM>0?(totalInc/totalAUM*100):0;
+  const benchYield = parseFloat(document.getElementById('fundBenchYield').value)||1.3;
+
+  // Inception days
+  let inceptDays = null;
+  const inceptVal = document.getElementById('fundInception').value;
+  if(inceptVal){ const d=new Date(inceptVal); inceptDays=Math.max(1,Math.round((Date.now()-d)/86400000)); }
+
+  // KPIs
+  document.getElementById('fundKPIs').innerHTML = [
+    {v:fmt(totalAUM,0), l:'Total AUM', c:'var(--bl)'},
+    {v:'$'+NAV.toFixed(2), l:'NAV per Share', c:'var(--tx)'},
+    {v:fmt(totalInc,0)+'/yr', l:'Total Annual Income', c:'var(--am)'},
+  ].map(i=>`<div class="mc a1" style="margin:0;"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c}">${i.v}</div></div>`).join('');
+
+  // Donut — stocks vs each staking pos
+  const donutLabels = ['Dividend Stocks', ...stakePositions.map(s=>s.proto+' '+s.token)];
+  const donutData   = [stockAUM, ...stakePositions.map(s=>s.usd)];
+  const donutColors = ['#3b9eff','#f5a623','#9b59b6','#1abc9c','#e74c3c','#e67e22'];
+  if(fundDonutCh) fundDonutCh.destroy();
+  fundDonutCh = new Chart(document.getElementById('fundDonut'),{
+    type:'doughnut',
+    data:{labels:donutLabels, datasets:[{data:donutData, backgroundColor:donutColors, borderWidth:0, hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw,0)} (${(c.raw/totalAUM*100).toFixed(1)}%)`}}}}
+  });
+
+  // Asset list
+  document.getElementById('fundAssetList').innerHTML = donutLabels.map((l,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12px;">
+      <span style="width:10px;height:10px;background:${donutColors[i]};border-radius:2px;flex-shrink:0"></span>
+      <span style="color:var(--tx2);flex:1">${l}</span>
+      <span style="font-family:var(--mono);font-weight:500">${fmt(donutData[i],0)}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--tx3)">${(totalAUM>0?donutData[i]/totalAUM*100:0).toFixed(1)}%</span>
+    </div>`).join('');
+
+  // Income bar
+  const incLabels = ['Dividend Stocks', ...stakePositions.map(s=>s.proto)];
+  const incData   = [stockInc, ...stakePositions.map(s=>stakeAnnualIncome(s))];
+  if(fundIncomeBarCh) fundIncomeBarCh.destroy();
+  fundIncomeBarCh = new Chart(document.getElementById('fundIncomeBar'),{
+    type:'bar',
+    data:{labels:incLabels, datasets:[{data:incData, backgroundColor:donutColors, borderRadius:5, borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` $${c.raw.toFixed(0)}/yr`}}},
+      scales:{x:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:11}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:11},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+  });
+
+  // Metrics table
+  const yieldDiff = fundYield - benchYield;
+  document.getElementById('fundMetricsTable').innerHTML = [
+    {l:'Total AUM', v:fmt(totalAUM,0), c:'var(--bl)'},
+    {l:'NAV / Share', v:'$'+NAV.toFixed(4), c:'var(--tx)'},
+    {l:'Income / Share / yr', v:'$'+incPerShare.toFixed(4), c:'var(--am)'},
+    {l:'Fund Yield', v:fundYield.toFixed(2)+'%', c:'var(--tl)'},
+    {l:'Benchmark Yield', v:benchYield.toFixed(2)+'%', c:'var(--tx2)'},
+    {l:'Yield Alpha', v:(yieldDiff>=0?'+':'')+yieldDiff.toFixed(2)+'%', c:yieldDiff>=0?'var(--gr)':'var(--rd)'},
+    {l:'Monthly Income', v:fmt(totalInc/12), c:'var(--am)'},
+    {l:'Weekly Income', v:fmt(totalInc/52), c:'var(--am)'},
+    {l:'Stock / DeFi Split', v:(totalAUM>0?(stockAUM/totalAUM*100).toFixed(0):0)+'% / '+(totalAUM>0?(stakeAUM/totalAUM*100).toFixed(0):0)+'%', c:'var(--tx2)'},
+    inceptDays?{l:'Days Since Inception', v:inceptDays+' days', c:'var(--tx2)'}:{l:'Fund Inception', v:'Set date →', c:'var(--tx3)'},
+  ].map(r=>`<div class="tbd-row"><span class="tbd-label">${r.l}</span><span class="tbd-val" style="color:${r.c}">${r.v}</span></div>`).join('');
+
+  // Registry
+  const allAssets = [
+    ...stocks.map(s=>({name:s.name, type:'Dividend Stock', value:s.equity, income:s.annDiv, yield:s.yield, pctAUM:totalAUM>0?s.equity/totalAUM*100:0, pctInc:totalInc>0?s.annDiv/totalInc*100:0})),
+    ...stakePositions.map(s=>({name:s.proto+' — '+s.token, type:'Staking / DeFi', value:s.usd, income:stakeAnnualIncome(s), yield:s.apy, pctAUM:totalAUM>0?s.usd/totalAUM*100:0, pctInc:totalInc>0?stakeAnnualIncome(s)/totalInc*100:0})),
+  ].sort((a,b)=>b.value-a.value);
+  document.getElementById('fundRegistry').innerHTML = allAssets.map(a=>`<tr>
+    <td><div class="sn" title="${a.name}">${a.name}</div></td>
+    <td class="r"><span class="sym-b" style="${a.type==='Staking / DeFi'?'background:var(--am-d);color:var(--am)':''}">${a.type==='Staking / DeFi'?'DeFi':'Stock'}</span></td>
+    <td class="r num neu">${fmt(a.value,0)}</td>
+    <td class="r num neu">${a.pctAUM.toFixed(1)}%</td>
+    <td class="r num" style="color:var(--am)">${fmt(a.income)}</td>
+    <td class="r num" style="color:${a.yield>=6?'var(--am)':a.yield>=3?'var(--tl)':'var(--tx2)'}">${a.yield.toFixed(1)}%</td>
+    <td class="r"><div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+      <span class="num" style="color:var(--tx2);font-size:11px">${a.pctInc.toFixed(1)}%</span>
+      <div style="width:40px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden"><div style="width:${Math.min(a.pctInc*2,100).toFixed(0)}%;height:100%;background:var(--am);border-radius:2px"></div></div>
+    </div></td>
+  </tr>`).join('');
+}
+
 // ══════════════════ BALANCE VISIBILITY ══════════════════
 let valuesVisible = true;
 function toggleValuesVisible(){
@@ -1389,6 +1791,7 @@ function refreshAll(){
 
 // ══════════════════ INIT ══════════════════
 loadApiKey();
+loadStakeData();
 const didLoad = loadPortfolio();
 // Show last saved time in price bar if data was restored
 if(didLoad){
