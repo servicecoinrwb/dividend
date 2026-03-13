@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dividend Portfolio Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b0d10;--s1:#131619;--s2:#1a1e23;--s3:#22272e;--s4:#2a2f37;
+  --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.1);--b3:rgba(255,255,255,0.18);
+  --tx:#e6e9ed;--tx2:#8d95a0;--tx3:#4d555f;
+  --gr:#2ecc71;--gr-d:rgba(46,204,113,0.14);
+  --rd:#e74c3c;--rd-d:rgba(231,76,60,0.14);
+  --bl:#3b9eff;--bl-d:rgba(59,158,255,0.13);
+  --am:#f5a623;--am-d:rgba(245,166,35,0.13);
+  --tl:#1abc9c;--tl-d:rgba(26,188,156,0.13);
+  --pu:#9b59b6;--pu-d:rgba(155,89,182,0.13);
+  --sans:'Sora',sans-serif;--mono:'DM Mono',monospace;
+  --r6:6px;--r8:8px;--r12:12px;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh;}
+.app{max-width:1340px;margin:0 auto;padding:22px 18px 60px;}
+
+/* TOP BAR */
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--b1);}
+.tb-left .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px;}
+.tb-left .total{font-size:36px;font-weight:600;font-family:var(--mono);letter-spacing:-0.02em;}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-family:var(--mono);font-weight:500;}
+.c-gr{background:var(--gr-d);color:var(--gr);}.c-bl{background:var(--bl-d);color:var(--bl);}
+.c-am{background:var(--am-d);color:var(--am);}.c-tl{background:var(--tl-d);color:var(--tl);}
+.c-pu{background:var(--pu-d);color:var(--pu);}.c-rd{background:var(--rd-d);color:var(--rd);}
+.tb-right{text-align:right;}
+.tb-right .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px;}
+.tb-right .annual{font-size:28px;font-weight:600;font-family:var(--mono);color:var(--am);}
+.tb-right .sub{font-size:12px;color:var(--tx2);margin-top:3px;}
+.values-hidden .total,.values-hidden #cReturn,.values-hidden #cYield,.values-hidden #cYOC,.values-hidden #tbRightValues,.values-hidden .metrics .mv,.values-hidden .metrics .ms{filter:blur(9px);user-select:none;transition:filter .25s;}
+.total,.metrics .mv,.metrics .ms,#cReturn,#cYield,#cYOC,#tbRightValues{transition:filter .25s;}
+
+/* PRICE BAR */
+.pricebar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);margin-bottom:18px;flex-wrap:wrap;}
+.pb-status{font-size:11px;color:var(--tx3);}
+.pb-time{font-size:11px;color:var(--tx3);margin-left:auto;}
+.pb-btn{padding:5px 14px;border-radius:6px;border:1px solid var(--b2);background:transparent;color:var(--bl);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.pb-btn:hover{background:var(--bl-d);}
+.pb-btn.loading{opacity:.5;pointer-events:none;}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--b3);border-top-color:var(--bl);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.price-ok{color:var(--gr);}.price-err{color:var(--rd);}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+.mc{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);padding:13px 15px;position:relative;overflow:hidden;}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;}
+.mc.a1::after{background:var(--bl);}.mc.a2::after{background:var(--gr);}
+.mc.a3::after{background:var(--am);}.mc.a4::after{background:var(--tl);}.mc.a5::after{background:var(--pu);}
+.ml{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:6px;}
+.mv{font-size:21px;font-weight:600;font-family:var(--mono);line-height:1;}
+.ms{font-size:11px;color:var(--tx2);margin-top:5px;}
+
+/* TABS */
+.tab-bar{display:flex;gap:3px;margin-bottom:16px;background:var(--s1);padding:4px;border-radius:var(--r8);border:1px solid var(--b1);width:fit-content;flex-wrap:wrap;}
+.tb{padding:7px 16px;border-radius:6px;border:none;background:transparent;color:var(--tx2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tb:hover{color:var(--tx);}
+.tb.active{background:var(--s3);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.5);}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);overflow:hidden;margin-bottom:14px;}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--b1);}
+.ct{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--tx2);}
+.ch-actions{display:flex;gap:8px;align-items:center;}
+
+/* BUTTONS */
+.btn{padding:6px 14px;border-radius:var(--r6);border:1px solid var(--b2);background:transparent;color:var(--tx);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn:hover{background:var(--s3);}
+.btn-green{border-color:var(--gr);color:var(--gr);}.btn-green:hover{background:var(--gr-d);}
+.btn-red{border-color:var(--rd);color:var(--rd);}.btn-red:hover{background:var(--rd-d);}
+.btn-blue{border-color:var(--bl);color:var(--bl);background:var(--bl-d);}
+.btn-blue:hover{background:rgba(59,158,255,0.22);}
+.btn-solid{background:var(--bl);border-color:var(--bl);color:#fff;}.btn-solid:hover{opacity:.85;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:8px 12px;text-align:left;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);background:var(--s1);border-bottom:1px solid var(--b1);cursor:pointer;white-space:nowrap;user-select:none;}
+thead th:hover{color:var(--tx2);}thead th.sorted{color:var(--bl);}
+th.r,td.r{text-align:right;}
+tbody tr{border-bottom:1px solid var(--b1);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--s2);}
+td{padding:10px 12px;font-size:12px;white-space:nowrap;}
+.sym-b{font-family:var(--mono);font-size:10px;background:var(--bl-d);color:var(--bl);padding:2px 6px;border-radius:3px;}
+.sn{font-weight:500;font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.num{font-family:var(--mono);}
+.pos{color:var(--gr);}.neg{color:var(--rd);}.neu{color:var(--tx2);}
+.eq-bar{display:inline-block;width:46px;height:3px;background:var(--s3);border-radius:2px;vertical-align:middle;margin-left:6px;overflow:hidden;}
+.eq-bar-fill{height:100%;background:var(--tl);border-radius:2px;}
+.price-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:11px;}
+.price-live{color:var(--gr);}
+.price-stale{color:var(--tx2);}
+
+/* YIELD INPUT */
+.yi{display:flex;align-items:center;gap:4px;justify-content:flex-end;}
+.yi input{width:54px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--am);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;}
+.yi input:focus{border-color:var(--am);}
+
+/* SHARES INPUT */
+.si input{width:72px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--tx);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;}
+.si input:focus{border-color:var(--bl);}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--b1);}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--tx2);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;}
+.modal-close:hover{color:var(--tx);}
+.modal-body{padding:20px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);font-weight:500;}
+.fg input,.fg select,.fg textarea{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:13px;padding:9px 11px;width:100%;outline:none;transition:border .15s;}
+.fg input:focus,.fg select:focus{border-color:var(--bl);}
+.fg select option{background:var(--s2);}
+.fg .hint{font-size:10px;color:var(--tx3);}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--b1);}
+.chk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:2px;}
+.month-chk{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--tx2);}
+.month-chk input[type=checkbox]{accent-color:var(--bl);width:15px;height:15px;cursor:pointer;}
+
+/* DONUT + BAR ROW */
+.charts-row{display:grid;grid-template-columns:190px 1fr;gap:12px;margin-bottom:14px;}
+.ch-wrap{position:relative;}
+
+/* CALENDAR */
+.cal-qs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.cal-grid{display:grid;grid-template-columns:repeat(12,1fr);}
+.cal-month{border-right:1px solid var(--b1);padding:10px 8px;}
+.cal-month:last-child{border-right:none;}
+.cal-mname{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:7px;font-weight:500;}
+.cal-sym{display:inline-block;margin:2px 2px;padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:10px;font-weight:500;}
+.cal-total{font-family:var(--mono);font-size:10px;color:var(--tx3);padding:4px 0 0;margin-top:5px;border-top:1px solid var(--b1);}
+
+/* PROJECTION */
+.proj-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:14px 16px;border-bottom:1px solid var(--b1);}
+.cg{display:flex;flex-direction:column;gap:5px;}
+.cg-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);}
+.cg-val{font-family:var(--mono);font-size:15px;font-weight:500;}
+input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
+.toggle-row{display:flex;align-items:center;gap:8px;}
+.tog{width:36px;height:19px;background:var(--s3);border-radius:10px;cursor:pointer;position:relative;border:1px solid var(--b2);transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--bl);}
+.tog::after{content:'';position:absolute;width:13px;height:13px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;}
+.tog.on::after{left:19px;}
+.tog-label{font-size:12px;color:var(--tx2);}
+.proj-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;border-top:1px solid var(--b1);}
+.ps-v{font-family:var(--mono);font-size:17px;font-weight:600;margin-bottom:3px;}
+.ps-l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);}
+
+/* CALCULATOR */
+.calc-lay{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.calc-l{padding:18px 20px;border-right:1px solid var(--b1);}
+.calc-r{padding:18px 20px;}
+.cs-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:14px;font-weight:500;}
+.cr{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.cr label{font-size:11px;color:var(--tx2);}
+.cr input,.cr select{background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:8px 10px;width:100%;outline:none;}
+.cr input:focus,.cr select:focus{border-color:var(--bl);}
+.cr select option{background:var(--s2);}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.rc{background:var(--s2);border-radius:var(--r8);padding:12px;border:1px solid var(--b1);}
+.rc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:5px;}
+.rc-val{font-family:var(--mono);font-size:18px;font-weight:600;}
+.rt{width:100%;margin-top:14px;font-size:11px;}
+.rt td{padding:5px 6px;border-bottom:1px solid var(--b1);}
+.rt td:last-child{font-family:var(--mono);text-align:right;}
+.rt tr:last-child td{border-bottom:none;}
+
+/* TAX */
+.tax-lay{display:grid;grid-template-columns:320px 1fr;gap:14px;}
+.tax-inputs{padding:18px 16px;}
+.tax-results{padding:18px 16px;}
+.tax-section{margin-bottom:18px;}
+.tax-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:12px;font-weight:500;padding-bottom:6px;border-bottom:1px solid var(--b1);}
+.tax-row{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.tax-row label{font-size:11px;color:var(--tx2);}
+.tax-row input,.tax-row select{background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--tx);font-family:var(--mono);font-size:13px;padding:7px 10px;width:100%;outline:none;}
+.tax-row input:focus,.tax-row select:focus{border-color:var(--bl);}
+.tax-row select option{background:var(--s2);}
+.tax-metric{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r8);padding:12px 14px;margin-bottom:8px;}
+.tax-metric .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:4px;}
+.tax-metric .val{font-family:var(--mono);font-size:20px;font-weight:600;}
+.tax-breakdown{margin-top:14px;}
+.tbd-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--b1);font-size:12px;}
+.tbd-row:last-child{border:none;}
+.tbd-label{color:var(--tx2);}
+.tbd-val{font-family:var(--mono);font-weight:500;}
+.tax-bar-section{margin-top:16px;}
+.tax-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;}
+.tax-bar-label{width:120px;color:var(--tx2);}
+.tax-bar-track{flex:1;height:7px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.tax-bar-fill{height:100%;border-radius:3px;transition:width .4s;}
+.tax-bar-amount{width:70px;text-align:right;font-family:var(--mono);color:var(--tx);}
+.tax-note{font-size:11px;color:var(--tx3);line-height:1.7;margin-top:14px;padding:10px;background:var(--s2);border-radius:var(--r6);border:1px solid var(--b1);}
+
+/* FOOTER */
+.footer{font-size:10px;color:var(--tx3);padding:10px 16px;border-top:1px solid var(--b1);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+
+@media(max-width:1100px){.metrics{grid-template-columns:repeat(3,1fr)}.charts-row{grid-template-columns:1fr}}
+@media(max-width:800px){.metrics{grid-template-columns:repeat(2,1fr)}.proj-controls{grid-template-columns:repeat(2,1fr)}.calc-lay{grid-template-columns:1fr}.tax-lay{grid-template-columns:1fr}.cal-grid{grid-template-columns:repeat(6,1fr)}.rg{grid-template-columns:1fr}}
+@media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <div class="lbl">Dividend Portfolio</div>
+    <div class="total" id="topTotal">—</div>
+    <div class="chips">
+      <span class="chip" id="cReturn">—</span>
+      <span class="chip c-bl" id="cYield">—</span>
+      <span class="chip c-tl" id="cYOC">—</span>
+      <span class="chip c-pu" id="cCount">— holdings</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+    <button id="visToggleBtn" onclick="toggleValuesVisible()" title="Show/hide balances" style="background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--tx2);font-family:var(--sans);font-size:11px;font-weight:500;padding:5px 11px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;margin-bottom:2px;">
+      <span id="visIcon" style="font-size:13px;">👁</span>
+      <span id="visLabel">Hide Balances</span>
+    </button>
+    <div class="tb-right" id="tbRightValues">
+      <div class="lbl">Annual Dividend Income</div>
+      <div class="annual" id="topAnnual">—</div>
+      <div class="sub">≈ <span id="topMonthly">—</span>/mo · <span id="topWeekly">—</span>/wk</div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICE BAR -->
+<div class="pricebar">
+  <button class="pb-btn" id="refreshBtn" onclick="refreshPrices()">
+    <span id="refreshIcon">↻</span> Refresh Prices
+  </button>
+  <span class="pb-status" id="priceStatus">Prices are manual — click Refresh to fetch live quotes from Yahoo Finance</span>
+  <span class="pb-time" id="priceTime"></span>
+</div>
+
+<!-- METRICS -->
+<div class="metrics">
+  <div class="mc a1"><div class="ml">Portfolio Value</div><div class="mv" id="m1v">—</div><div class="ms" id="m1s">—</div></div>
+  <div class="mc a2"><div class="ml">Total Return</div><div class="mv" id="m2v">—</div><div class="ms" id="m2s">—</div></div>
+  <div class="mc a3"><div class="ml">Ann. Dividends</div><div class="mv" style="color:var(--am)" id="m3v">—</div><div class="ms" id="m3s">—</div></div>
+  <div class="mc a4"><div class="ml">Current Yield</div><div class="mv" style="color:var(--tl)" id="m4v">—</div><div class="ms">on market value</div></div>
+  <div class="mc a5"><div class="ml">Yield on Cost</div><div class="mv" style="color:var(--pu)" id="m5v">—</div><div class="ms">on avg cost</div></div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tb active" onclick="showTab('holdings',this)">Holdings</button>
+  <button class="tb" onclick="showTab('calendar',this)">Dividend Calendar</button>
+  <button class="tb" onclick="showTab('projection',this)">Growth Projection</button>
+  <button class="tb" onclick="showTab('calculator',this)">Calculator</button>
+  <button class="tb" onclick="showTab('tax',this)">Tax Estimate</button>
+</div>
+
+<!-- ══════════ HOLDINGS TAB ══════════ -->
+<div id="tab-holdings">
+  <div class="charts-row">
+    <div class="card">
+      <div class="ch" style="border:none;padding-bottom:6px;"><span class="ct">Allocation</span></div>
+      <div style="padding:4px 14px 10px;"><div class="ch-wrap" style="height:170px;"><canvas id="donutChart"></canvas></div></div>
+      <div id="donutLegend" style="padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10px;color:var(--tx2);"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Annual Income by Holding</span></div>
+      <div style="padding:10px 14px 8px;"><div class="ch-wrap" style="height:188px;"><canvas id="barChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      <span class="ct">All Holdings</span>
+      <div class="ch-actions">
+        <input id="searchBox" type="text" placeholder="Search…" oninput="renderHoldings()" style="background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--tx);font-family:var(--sans);font-size:11px;padding:5px 10px;width:160px;outline:none;">
+        <button class="btn btn-green btn-sm" onclick="openModal()">+ Add Holding</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortBy('name')">Name</th>
+          <th class="r" onclick="sortBy('symbol')">Symbol</th>
+          <th class="r" onclick="sortBy('shares')">Shares</th>
+          <th class="r" onclick="sortBy('price')">Price</th>
+          <th class="r" onclick="sortBy('avgCost')">Avg Cost</th>
+          <th class="r" onclick="sortBy('totalReturn')">Return $</th>
+          <th class="r" onclick="sortBy('returnPct')">Return %</th>
+          <th class="r" onclick="sortBy('equity')">Equity</th>
+          <th class="r">Div Yield %</th>
+          <th class="r" onclick="sortBy('annDiv')">Ann. Income</th>
+          <th class="r" onclick="sortBy('monthDiv')">Monthly</th>
+          <th class="r">Actions</th>
+        </tr></thead>
+        <tbody id="holdTbody"></tbody>
+      </table>
+    </div>
+    <div class="footer">Edit yield %, shares, or price inline. Use actions to edit full details or remove a holding.</div>
+  </div>
+</div>
+
+<!-- ══════════ CALENDAR TAB ══════════ -->
+<div id="tab-calendar" style="display:none;">
+  <div class="cal-qs" id="calQs"></div>
+  <div class="card">
+    <div class="ch"><span class="ct">Payment Calendar</span><span style="font-size:10px;color:var(--tx3)">Estimated per-payment amounts</span></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Monthly Income Trend</span></div>
+    <div style="padding:10px 14px 8px;"><div class="ch-wrap" style="height:190px;"><canvas id="calBarChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ══════════ PROJECTION TAB ══════════ -->
+<div id="tab-projection" style="display:none;">
+  <div class="card">
+    <div class="ch"><span class="ct">Portfolio Growth Projection</span></div>
+    <div class="proj-controls">
+      <div class="cg"><div class="cg-lbl">Years</div><div class="cg-val"><span id="pYrs">20</span> yrs</div><input type="range" id="rYrs" min="1" max="40" value="20" oninput="document.getElementById('pYrs').textContent=this.value;buildProjection()"></div>
+      <div class="cg"><div class="cg-lbl">Monthly Contribution</div><div class="cg-val">$<span id="pCon">500</span></div><input type="range" id="rCon" min="0" max="5000" step="50" value="500" oninput="document.getElementById('pCon').textContent=Number(this.value).toLocaleString();buildProjection()"></div>
+      <div class="cg"><div class="cg-lbl">Price Growth / yr</div><div class="cg-val"><span id="pGr">5.0</span>%</div><input type="range" id="rGr" min="0" max="15" step="0.5" value="5" oninput="document.getElementById('pGr').textContent=parseFloat(this.value).toFixed(1);buildProjection()"></div>
+      <div class="cg"><div class="cg-lbl">Dividend Growth / yr</div><div class="cg-val"><span id="pDG">4.0</span>%</div><input type="range" id="rDG" min="0" max="15" step="0.5" value="4" oninput="document.getElementById('pDG').textContent=parseFloat(this.value).toFixed(1);buildProjection()"></div>
+    </div>
+    <div style="padding:8px 16px;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);display:flex;gap:28px;flex-wrap:wrap;">
+      <div class="toggle-row"><div class="tog on" id="dripTog" onclick="this.classList.toggle('on');buildProjection()"></div><span class="tog-label">DRIP (reinvest dividends)</span></div>
+      <div class="toggle-row"><div class="tog on" id="conTog" onclick="this.classList.toggle('on');buildProjection()"></div><span class="tog-label">Include monthly contributions</span></div>
+    </div>
+    <div style="padding:14px 16px;"><div id="projLegend" style="display:flex;gap:18px;margin-bottom:10px;font-size:11px;"></div><div class="ch-wrap" style="height:270px;"><canvas id="projChart"></canvas></div></div>
+    <div class="proj-summary" id="projSum"></div>
+  </div>
+</div>
+
+<!-- ══════════ CALCULATOR TAB ══════════ -->
+<div id="tab-calculator" style="display:none;">
+  <div class="card">
+    <div class="calc-lay">
+      <div class="calc-l">
+        <div class="cs-title">Income Calculator</div>
+        <div class="cr"><label>Investment Amount ($)</label><input type="number" id="ci1" value="10000" oninput="runCalc()"></div>
+        <div class="cr"><label>Dividend Yield (%)</label><input type="number" id="ci2" step="0.01" oninput="runCalc()"></div>
+        <div class="cr"><label>Dividend Growth Rate (% / yr)</label><input type="number" id="ci3" value="4" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Price Appreciation (% / yr)</label><input type="number" id="ci4" value="5" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Time Horizon (years)</label><input type="number" id="ci5" value="10" oninput="runCalc()"></div>
+        <div class="cr"><label>Payment Frequency</label>
+          <select id="ci6" onchange="runCalc()"><option value="12">Monthly</option><option value="4" selected>Quarterly</option><option value="2">Semi-Annual</option><option value="1">Annual</option></select>
+        </div>
+        <div class="cr"><label>Extra Monthly Investment ($)</label><input type="number" id="ci7" value="0" oninput="runCalc()"></div>
+        <div class="toggle-row" style="margin-top:4px;">
+          <div class="tog on" id="calcDrip" onclick="this.classList.toggle('on');runCalc()"></div>
+          <span class="tog-label">DRIP (reinvest dividends)</span>
+        </div>
+      </div>
+      <div class="calc-r">
+        <div class="cs-title">Results</div>
+        <div class="rg" id="calcResults"></div>
+        <table class="rt" id="calcTable"></table>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Portfolio Quick Stats</span></div>
+    <div style="padding:14px 16px;"><div class="rg" style="grid-template-columns:repeat(3,1fr);" id="quickStats"></div></div>
+  </div>
+</div>
+
+<!-- ══════════ TAX TAB ══════════ -->
+<div id="tab-tax" style="display:none;">
+  <div class="card">
+    <div class="tax-lay">
+      <div class="tax-inputs" style="border-right:1px solid var(--b1);">
+        <div class="tax-section">
+          <div class="tax-section-title">Filing Status & Income</div>
+          <div class="tax-row"><label>Filing Status</label>
+            <select id="txStatus" onchange="runTax()">
+              <option value="single">Single</option>
+              <option value="mfj" selected>Married Filing Jointly</option>
+              <option value="mfs">Married Filing Separately</option>
+              <option value="hoh">Head of Household</option>
+            </select>
+          </div>
+          <div class="tax-row"><label>Annual Ordinary Income ($)</label><input type="number" id="txIncome" value="85000" oninput="runTax()"></div>
+          <div class="tax-row"><label>State Tax Rate (%)</label><input type="number" id="txState" value="4.25" step="0.1" oninput="runTax()"></div>
+        </div>
+        <div class="tax-section">
+          <div class="tax-section-title">Dividend Classification</div>
+          <div class="tax-row"><label>Qualified Dividends (%)</label><input type="number" id="txQual" value="80" min="0" max="100" oninput="runTax()"><div class="hint" style="font-size:10px;color:var(--tx3);margin-top:3px;">Most ETFs/stocks pay qualified divs. REITs/MLPs may be ordinary.</div></div>
+          <div class="tax-row"><label>Return of Capital (%)</label><input type="number" id="txROC" value="5" min="0" max="100" oninput="runTax()"></div>
+        </div>
+        <div class="tax-section">
+          <div class="tax-section-title">Override Annual Dividend Income</div>
+          <div class="tax-row"><label>Use portfolio total or custom amount</label>
+            <select id="txIncSrc" onchange="runTax()"><option value="portfolio">Use Portfolio Total</option><option value="custom">Custom Amount</option></select>
+          </div>
+          <div class="tax-row" id="txCustomRow" style="display:none;"><label>Custom Annual Dividends ($)</label><input type="number" id="txCustom" value="1300" oninput="runTax()"></div>
+        </div>
+      </div>
+      <div class="tax-results">
+        <div class="tax-section-title">Tax Estimate — <span id="txYear">2025</span> Tax Year</div>
+        <div id="taxMetrics" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;"></div>
+        <div class="tax-breakdown" id="taxBreak"></div>
+        <div class="tax-bar-section" id="taxBars"></div>
+        <div class="tax-note" id="taxNote"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Per-Holding Tax Breakdown</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th class="r">Symbol</th><th class="r">Ann. Income</th>
+          <th class="r">Qualified</th><th class="r">Ordinary</th><th class="r">Fed Tax Est.</th><th class="r">After-Tax</th>
+        </tr></thead>
+        <tbody id="taxTbody"></tbody>
+      </table>
+    </div>
+    <div class="footer">Estimates only. Consult a tax professional for accurate advice. MLPs (ET) may generate K-1 forms with different tax treatment.</div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- ══════════ ADD/EDIT MODAL ══════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modalTitle">Add Holding</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg full"><label>Company / Fund Name</label><input type="text" id="fName" placeholder="e.g. Apple Inc."></div>
+        <div class="fg"><label>Ticker Symbol</label><input type="text" id="fSymbol" placeholder="AAPL" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Shares Owned</label><input type="number" id="fShares" placeholder="0" step="any"></div>
+        <div class="fg"><label>Current Price ($)</label><input type="number" id="fPrice" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Average Cost / Share ($)</label><input type="number" id="fAvgCost" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Dividend Yield (%)</label><input type="number" id="fYield" placeholder="0.0" step="0.1"></div>
+        <div class="fg"><label>Payment Frequency</label>
+          <select id="fFreq">
+            <option value="M">Monthly</option>
+            <option value="Q" selected>Quarterly</option>
+            <option value="SA">Semi-Annual</option>
+            <option value="A">Annual</option>
+          </select>
+        </div>
+        <div class="fg"><label>Dividend Type</label>
+          <select id="fDivType">
+            <option value="qualified">Qualified</option>
+            <option value="ordinary">Ordinary</option>
+            <option value="mixed">Mixed (ETF/Fund)</option>
+            <option value="roc">Includes Return of Capital</option>
+          </select>
+        </div>
+        <div class="fg full">
+          <label>Payment Months</label>
+          <div class="chk-grid">
+            <div class="month-chk"><span>Jan</span><input type="checkbox" name="paymo" value="1"></div>
+            <div class="month-chk"><span>Feb</span><input type="checkbox" name="paymo" value="2"></div>
+            <div class="month-chk"><span>Mar</span><input type="checkbox" name="paymo" value="3" checked></div>
+            <div class="month-chk"><span>Apr</span><input type="checkbox" name="paymo" value="4"></div>
+            <div class="month-chk"><span>May</span><input type="checkbox" name="paymo" value="5"></div>
+            <div class="month-chk"><span>Jun</span><input type="checkbox" name="paymo" value="6" checked></div>
+            <div class="month-chk"><span>Jul</span><input type="checkbox" name="paymo" value="7"></div>
+            <div class="month-chk"><span>Aug</span><input type="checkbox" name="paymo" value="8"></div>
+            <div class="month-chk"><span>Sep</span><input type="checkbox" name="paymo" value="9" checked></div>
+            <div class="month-chk"><span>Oct</span><input type="checkbox" name="paymo" value="10"></div>
+            <div class="month-chk"><span>Nov</span><input type="checkbox" name="paymo" value="11"></div>
+            <div class="month-chk"><span>Dec</span><input type="checkbox" name="paymo" value="12" checked></div>
+          </div>
+          <div class="hint" style="margin-top:6px;">Tip: Quarterly (Mar/Jun/Sep/Dec) is most common. Monthly payers check all 12.</div>
+        </div>
+      </div>
+      <div id="modalCalc" style="margin-top:16px;padding:12px;background:var(--s2);border-radius:var(--r8);font-size:12px;color:var(--tx2);"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="saveHolding()" id="saveBtn">Save Holding</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════ DATA ══════════════════
+const MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS = ['#3b9eff','#2ecc71','#f5a623','#1abc9c','#9b59b6','#e67e22','#e74c3c','#3498db','#27ae60','#f39c12','#8e44ad','#16a085','#d35400','#c0392b','#2980b9'];
+
+let stocks = [
+  {id:1,name:"Schwab US Dividend Equity ETF",symbol:"SCHD",shares:115,price:30.88,avgCost:26.98,totalReturn:448.29,yield:3.7,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:2,name:"Enbridge",symbol:"ENB",shares:55.618,price:54.11,avgCost:47.57,totalReturn:363.48,yield:6.1,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:3,name:"NextEra Energy",symbol:"NEE",shares:31,price:93.47,avgCost:84.24,totalReturn:286.24,yield:3.2,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:4,name:"DTE Energy",symbol:"DTE",shares:21.174,price:149.37,avgCost:138.46,totalReturn:231.00,yield:3.5,freq:"Q",payMonths:[1,4,7,10],divType:"qualified",priceIsLive:false},
+  {id:5,name:"Exelon",symbol:"EXC",shares:55,price:50.30,avgCost:46.82,totalReturn:191.56,yield:3.8,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:6,name:"Global X US Infrastructure ETF",symbol:"PAVE",shares:18.114,price:50.35,avgCost:48.27,totalReturn:37.68,yield:0.8,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:7,name:"American Water Works",symbol:"AWK",shares:20.123,price:139.00,avgCost:137.23,totalReturn:35.68,yield:2.2,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:8,name:"JPMorgan Equity Premium Income",symbol:"JEPI",shares:51.981,price:57.42,avgCost:57.31,totalReturn:5.63,yield:8.0,freq:"M",payMonths:[1,2,3,4,5,6,7,8,9,10,11,12],divType:"ordinary",priceIsLive:false},
+  {id:9,name:"Brookfield Renewable Corp",symbol:"BEPC",shares:35,price:41.20,avgCost:41.10,totalReturn:3.21,yield:5.0,freq:"Q",payMonths:[3,6,9,12],divType:"qualified",priceIsLive:false},
+  {id:10,name:"Energy Transfer LP",symbol:"ET",shares:100.098,price:18.59,avgCost:18.58,totalReturn:1.35,yield:7.8,freq:"Q",payMonths:[2,5,8,11],divType:"ordinary",priceIsLive:false},
+  {id:11,name:"iShares 0-3 Month Treasury Bond",symbol:"SGOV",shares:21.122,price:100.51,avgCost:100.55,totalReturn:0.91,yield:5.2,freq:"M",payMonths:[1,2,3,4,5,6,7,8,9,10,11,12],divType:"ordinary",priceIsLive:false},
+  {id:12,name:"Luxfer Group",symbol:"LXFR",shares:110.925,price:11.54,avgCost:12.47,totalReturn:-102.61,yield:3.5,freq:"Q",payMonths:[1,4,7,10],divType:"qualified",priceIsLive:false},
+];
+let nextId = 13;
+let sortKey='equity', sortDir=-1, editId=null;
+
+// ══════════════════ MATH ══════════════════
+function calc(s){
+  s.equity = s.shares * s.price;
+  s.costBasis = s.shares * s.avgCost;
+  s.totalReturn = s.equity - s.costBasis;
+  s.returnPct = s.costBasis > 0 ? (s.totalReturn/s.costBasis)*100 : 0;
+  s.annDiv = s.equity*(s.yield/100);
+  s.monthDiv = s.annDiv/12;
+}
+function calcAll(){ stocks.forEach(calc); }
+
+// ══════════════════ FORMAT ══════════════════
+function fmt(n,d=2){if(n==null||isNaN(n))return'—';let abs=Math.abs(n).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');return(n<0?'-$':'$')+abs;}
+function fmtPct(n,d=1){return(n>=0?'+':'')+n.toFixed(d)+'%';}
+function fmtN(n){let s=n.toFixed(4);return parseFloat(s).toString();}
+function rc(n){return n>=0?'pos':'neg';}
+
+// ══════════════════ TOP BAR ══════════════════
+function updateTopBar(){
+  const te=stocks.reduce((a,s)=>a+s.equity,0);
+  const tr=stocks.reduce((a,s)=>a+s.totalReturn,0);
+  const ta=stocks.reduce((a,s)=>a+s.annDiv,0);
+  const tc=stocks.reduce((a,s)=>a+s.costBasis,0);
+  const yoc=tc>0?(ta/tc)*100:0, yld=te>0?(ta/te)*100:0;
+  document.getElementById('topTotal').textContent=fmt(te,0);
+  document.getElementById('topAnnual').textContent=fmt(ta);
+  document.getElementById('topMonthly').textContent=fmt(ta/12);
+  document.getElementById('topWeekly').textContent=fmt(ta/52);
+  const retEl=document.getElementById('cReturn');
+  retEl.textContent=(tr>=0?'▲ ':'▼ ')+fmt(Math.abs(tr),0)+' return';
+  retEl.className='chip '+(tr>=0?'c-gr':'c-rd');
+  document.getElementById('cYield').textContent='◆ '+yld.toFixed(2)+'% yield';
+  document.getElementById('cYOC').textContent='◆ '+yoc.toFixed(2)+'% YOC';
+  document.getElementById('cCount').textContent=stocks.length+' holdings';
+  document.getElementById('m1v').textContent=fmt(te,0);
+  document.getElementById('m1s').textContent=stocks.length+' positions';
+  const m2=document.getElementById('m2v');
+  m2.textContent=(tr>=0?'+':'')+fmt(tr,0);m2.className='mv '+(tr>=0?'pos':'neg');
+  document.getElementById('m2s').textContent=fmtPct(tc>0?tr/tc*100:0)+' on cost';
+  document.getElementById('m3v').textContent=fmt(ta,0);
+  document.getElementById('m3s').textContent='≈ '+fmt(ta/12)+'/mo';
+  document.getElementById('m4v').textContent=yld.toFixed(2)+'%';
+  document.getElementById('m5v').textContent=yoc.toFixed(2)+'%';
+}
+
+// ══════════════════ HOLDINGS TABLE ══════════════════
+function renderHoldings(){
+  const q=(document.getElementById('searchBox').value||'').toLowerCase();
+  let data=[...stocks].filter(s=>!q||s.symbol.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
+  data.sort((a,b)=>{
+    let av=a[sortKey],bv=b[sortKey];
+    if(typeof av==='string')return sortDir*av.localeCompare(bv);
+    return sortDir*(av-bv);
+  });
+  const maxEq=Math.max(...stocks.map(s=>s.equity),1);
+  document.getElementById('holdTbody').innerHTML=data.map(s=>{
+    const bw=(s.equity/maxEq*100).toFixed(1);
+    const yc=s.yield>=6?'var(--am)':s.yield>=3?'var(--tl)':'var(--tx2)';
+    const liveDot=s.priceIsLive?'<span style="color:var(--gr);font-size:9px;margin-left:3px;">●</span>':'';
+    return `<tr>
+      <td><div class="sn" title="${s.name}">${s.name}</div></td>
+      <td class="r"><span class="sym-b">${s.symbol}</span></td>
+      <td class="r"><div class="si"><input type="number" value="${fmtN(s.shares)}" step="any" min="0" title="Edit shares" onchange="updateField(${s.id},'shares',parseFloat(this.value)||0)"></div></td>
+      <td class="r num neu">$${s.price.toFixed(2)}${liveDot}</td>
+      <td class="r num neu">$${s.avgCost.toFixed(2)}</td>
+      <td class="r num ${rc(s.totalReturn)}">${fmt(s.totalReturn)}</td>
+      <td class="r num ${rc(s.returnPct)}">${fmtPct(s.returnPct)}</td>
+      <td class="r num neu" style="display:flex;align-items:center;justify-content:flex-end;">${fmt(s.equity,0)}<span class="eq-bar"><span class="eq-bar-fill" style="width:${bw}%"></span></span></td>
+      <td class="r"><div class="yi"><input type="number" value="${s.yield.toFixed(1)}" step="0.1" min="0" max="50" title="Edit yield" onchange="updateField(${s.id},'yield',parseFloat(this.value)||0)"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+      <td class="r num" style="color:var(--am)">${fmt(s.annDiv)}</td>
+      <td class="r num neu">${fmt(s.monthDiv)}</td>
+      <td class="r" style="white-space:nowrap;">
+        <button class="btn btn-sm" onclick="openModal(${s.id})" title="Edit">✏ Edit</button>
+        <button class="btn btn-red btn-sm" onclick="removeHolding(${s.id})" title="Remove" style="margin-left:4px;">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}renderHoldings();}
+
+function updateField(id,field,val){
+  const s=stocks.find(x=>x.id===id);
+  if(!s)return;
+  s[field]=val;
+  calc(s);
+  refreshAll();
+}
+
+function removeHolding(id){
+  const s=stocks.find(x=>x.id===id);
+  if(!s)return;
+  if(!confirm(`Remove ${s.name} (${s.symbol}) from portfolio?`))return;
+  stocks=stocks.filter(x=>x.id!==id);
+  refreshAll();
+}
+
+// ══════════════════ MODAL ══════════════════
+function getPayMonths(){
+  return Array.from(document.querySelectorAll('input[name=paymo]:checked')).map(c=>parseInt(c.value));
+}
+function setPayMonths(arr){
+  document.querySelectorAll('input[name=paymo]').forEach(c=>{c.checked=arr.includes(parseInt(c.value));});
+}
+function previewModal(){
+  const sh=parseFloat(document.getElementById('fShares').value)||0;
+  const pr=parseFloat(document.getElementById('fPrice').value)||0;
+  const ac=parseFloat(document.getElementById('fAvgCost').value)||0;
+  const yl=parseFloat(document.getElementById('fYield').value)||0;
+  if(!sh||!pr)return;
+  const eq=sh*pr,cb=sh*ac,ret=eq-cb,ann=eq*(yl/100);
+  document.getElementById('modalCalc').innerHTML=`<strong style="color:var(--tx)">Preview:</strong>&nbsp; Equity <span style="color:var(--bl)">${fmt(eq)}</span> · Return <span class="${rc(ret)}">${fmt(ret)}</span> · Ann. Income <span style="color:var(--am)">${fmt(ann)}</span> · Monthly <span style="color:var(--tl)">${fmt(ann/12)}</span>`;
+}
+['fShares','fPrice','fAvgCost','fYield'].forEach(id=>{
+  setTimeout(()=>{ const el=document.getElementById(id); if(el)el.addEventListener('input',previewModal); },100);
+});
+
+function openModal(id=null){
+  editId=id;
+  const modal=document.getElementById('modalOverlay');
+  modal.classList.add('open');
+  document.getElementById('modalTitle').textContent=id?'Edit Holding':'Add Holding';
+  document.getElementById('saveBtn').textContent=id?'Save Changes':'Add Holding';
+  if(id){
+    const s=stocks.find(x=>x.id===id);
+    document.getElementById('fName').value=s.name;
+    document.getElementById('fSymbol').value=s.symbol;
+    document.getElementById('fShares').value=fmtN(s.shares);
+    document.getElementById('fPrice').value=s.price;
+    document.getElementById('fAvgCost').value=s.avgCost;
+    document.getElementById('fYield').value=s.yield;
+    document.getElementById('fFreq').value=s.freq;
+    document.getElementById('fDivType').value=s.divType||'qualified';
+    setPayMonths(s.payMonths);
+  } else {
+    ['fName','fSymbol','fShares','fPrice','fAvgCost','fYield'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('fFreq').value='Q';
+    document.getElementById('fDivType').value='qualified';
+    setPayMonths([3,6,9,12]);
+    document.getElementById('modalCalc').innerHTML='';
+  }
+  previewModal();
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); editId=null; }
+
+function saveHolding(){
+  const name=document.getElementById('fName').value.trim();
+  const symbol=document.getElementById('fSymbol').value.trim().toUpperCase();
+  const shares=parseFloat(document.getElementById('fShares').value)||0;
+  const price=parseFloat(document.getElementById('fPrice').value)||0;
+  const avgCost=parseFloat(document.getElementById('fAvgCost').value)||price;
+  const yld=parseFloat(document.getElementById('fYield').value)||0;
+  const freq=document.getElementById('fFreq').value;
+  const divType=document.getElementById('fDivType').value;
+  const payMonths=getPayMonths();
+  if(!name||!symbol||!shares||!price){alert('Please fill in Name, Symbol, Shares, and Price.');return;}
+  if(payMonths.length===0){alert('Please select at least one payment month.');return;}
+  if(editId){
+    const s=stocks.find(x=>x.id===editId);
+    Object.assign(s,{name,symbol,shares,price,avgCost,yield:yld,freq,divType,payMonths});
+  } else {
+    stocks.push({id:nextId++,name,symbol,shares,price,avgCost,yield:yld,freq,divType,payMonths,priceIsLive:false});
+  }
+  closeModal();
+  refreshAll();
+}
+
+// Auto-set pay months by freq
+document.getElementById('fFreq')?.addEventListener('change',function(){
+  const presets={M:[1,2,3,4,5,6,7,8,9,10,11,12],Q:[3,6,9,12],SA:[6,12],A:[12]};
+  setPayMonths(presets[this.value]||[12]);
+});
+
+// ══════════════════ LIVE PRICES ══════════════════
+async function fetchPrice(symbol){
+  const urls=[
+    `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`,
+    `https://query2.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`
+  ];
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});
+      if(!r.ok)continue;
+      const d=await r.json();
+      const meta=d?.chart?.result?.[0]?.meta;
+      if(meta?.regularMarketPrice) return meta.regularMarketPrice;
+    }catch(e){}
+  }
+  // Try cors proxy
+  try{
+    const r=await fetch(`https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`)}`);
+    if(r.ok){
+      const d=await r.json();
+      const meta=d?.chart?.result?.[0]?.meta;
+      if(meta?.regularMarketPrice) return meta.regularMarketPrice;
+    }
+  }catch(e){}
+  return null;
+}
+
+async function refreshPrices(){
+  const btn=document.getElementById('refreshBtn');
+  const icon=document.getElementById('refreshIcon');
+  const status=document.getElementById('priceStatus');
+  btn.classList.add('loading');
+  icon.innerHTML='<span class="spinner"></span>';
+  status.textContent='Fetching live prices…';
+  status.className='pb-status';
+  let ok=0,fail=0;
+  for(const s of stocks){
+    const p=await fetchPrice(s.symbol);
+    if(p&&p>0){
+      s.price=p;
+      s.priceIsLive=true;
+      ok++;
+    } else {
+      fail++;
+      s.priceIsLive=false;
+    }
+    calcAll();
+    refreshAll();
+  }
+  btn.classList.remove('loading');
+  icon.textContent='↻';
+  const now=new Date().toLocaleTimeString();
+  document.getElementById('priceTime').textContent='Last updated: '+now;
+  if(ok>0&&fail===0){
+    status.innerHTML=`<span class="price-ok">✓ All ${ok} prices updated successfully</span>`;
+  } else if(ok>0){
+    status.innerHTML=`<span class="price-ok">✓ ${ok} updated</span> &nbsp;<span class="price-err">✗ ${fail} failed (CORS or market closed) — using last known prices</span>`;
+  } else {
+    status.innerHTML=`<span class="price-err">✗ Live prices unavailable (browser CORS policy or market closed). Try opening in a browser directly or update prices manually.</span>`;
+  }
+}
+
+// ══════════════════ CHARTS ══════════════════
+let donutCh,barCh,calBarCh,projCh;
+
+function buildDonut(){
+  if(donutCh){donutCh.destroy();}
+  const s2=[...stocks].sort((a,b)=>b.equity-a.equity);
+  const te=stocks.reduce((a,s)=>a+s.equity,0);
+  donutCh=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:s2.map(s=>s.symbol),datasets:[{data:s2.map(s=>+s.equity.toFixed(2)),backgroundColor:COLORS,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw,0)} (${(c.raw/te*100).toFixed(1)}%)`}}}},
+  });
+  document.getElementById('donutLegend').innerHTML=s2.map((s,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:${COLORS[i%COLORS.length]};border-radius:1px;flex-shrink:0"></span>${s.symbol} ${(s.equity/te*100).toFixed(0)}%</span>`).join('');
+}
+
+function buildBar(){
+  if(barCh){barCh.destroy();}
+  const s2=[...stocks].sort((a,b)=>b.annDiv-a.annDiv);
+  barCh=new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels:s2.map(s=>s.symbol),datasets:[{data:s2.map(s=>+s.annDiv.toFixed(2)),backgroundColor:s2.map((_,i)=>COLORS[i%COLORS.length]+'cc'),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` $${c.raw.toFixed(2)}/yr`}}},
+      scales:{x:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+  });
+}
+
+// ══════════════════ CALENDAR ══════════════════
+function buildCalendar(){
+  const mi=Array(12).fill(0);
+  stocks.forEach(s=>{const pp=s.annDiv/s.payMonths.length;s.payMonths.forEach(m=>mi[m-1]+=pp);});
+  const qs=[0,1,2].map(q=>mi[q*3]+mi[q*3+1]+mi[q*3+2]);
+  qs.push(mi[9]+mi[10]+mi[11]);
+  document.getElementById('calQs').innerHTML=['Q1 (Jan–Mar)','Q2 (Apr–Jun)','Q3 (Jul–Sep)','Q4 (Oct–Dec)'].map((l,i)=>
+    `<div class="mc a3"><div class="ml">${l}</div><div class="mv" style="color:var(--am)">${fmt(qs[i])}</div><div class="ms">3 months</div></div>`).join('');
+  document.getElementById('calGrid').innerHTML=MNAMES.map((mn,mi2)=>{
+    const paying=stocks.filter(s=>s.payMonths.includes(mi2+1)).sort((a,b)=>b.annDiv-a.annDiv);
+    const total=paying.reduce((a,s)=>a+s.annDiv/s.payMonths.length,0);
+    const syms=paying.map(s=>{
+      const c=COLORS[stocks.indexOf(s)%COLORS.length];
+      return `<span class="cal-sym" style="background:${c}22;color:${c}" title="${s.name}: ${fmt(s.annDiv/s.payMonths.length)}">${s.symbol}</span>`;
+    }).join('');
+    return `<div class="cal-month"><div class="cal-mname">${mn}</div>${syms||'<span style="font-size:10px;color:var(--tx3)">—</span>'}<div class="cal-total">${fmt(total)}</div></div>`;
+  }).join('');
+  if(calBarCh){calBarCh.destroy();}
+  const miData=Array(12).fill(0);
+  stocks.forEach(s=>{const pp=s.annDiv/s.payMonths.length;s.payMonths.forEach(m=>miData[m-1]+=pp);});
+  calBarCh=new Chart(document.getElementById('calBarChart'),{
+    type:'bar',
+    data:{labels:MNAMES,datasets:[{data:miData.map(v=>+v.toFixed(2)),backgroundColor:miData.map(v=>v>90?'#f5a623cc':'#3b9effcc'),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` $${c.raw.toFixed(2)}`}}},
+      scales:{x:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:11}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:11},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+  });
+}
+
+// ══════════════════ PROJECTION ══════════════════
+function buildProjection(){
+  const yrs=parseInt(document.getElementById('rYrs').value);
+  const con=parseFloat(document.getElementById('rCon').value);
+  const gr=parseFloat(document.getElementById('rGr').value)/100;
+  const dg=parseFloat(document.getElementById('rDG').value)/100;
+  const drip=document.getElementById('dripTog').classList.contains('on');
+  const useCon=document.getElementById('conTog').classList.contains('on');
+  const sv=stocks.reduce((a,s)=>a+s.equity,0);
+  const sd=stocks.reduce((a,s)=>a+s.annDiv,0);
+  const sy=sv>0?sd/sv:0;
+  const labs=[],pvArr=[],divArr=[],baseArr=[];
+  let pv=sv,div=sd;
+  for(let y=0;y<=yrs;y++){
+    labs.push(y===0?'Now':`Yr ${y}`);
+    pvArr.push(+pv.toFixed(0));divArr.push(+div.toFixed(0));
+    baseArr.push(+(sv+(useCon?con*12*y:0)).toFixed(0));
+    if(y<yrs){
+      const c=useCon?con*12:0;
+      const d2=drip?div:0;
+      pv=(pv+d2+c)*(1+gr);
+      div=(div*(1+dg))+(d2+c)*sy;
+    }
+  }
+  if(projCh){projCh.destroy();}
+  projCh=new Chart(document.getElementById('projChart'),{
+    type:'line',
+    data:{labels:labs,datasets:[
+      {label:'Portfolio Value',data:pvArr,borderColor:'#3b9eff',backgroundColor:'rgba(59,158,255,0.07)',fill:true,tension:0.4,borderWidth:2,pointRadius:0,pointHoverRadius:4},
+      {label:'Annual Dividends',data:divArr,borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,0.07)',fill:true,tension:0.4,borderWidth:2,pointRadius:0,pointHoverRadius:4},
+      {label:'No Growth Baseline',data:baseArr,borderColor:'#4d555f',fill:false,tension:0.4,borderWidth:1,borderDash:[4,4],pointRadius:0},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: $${c.raw.toLocaleString()}`}}},
+      scales:{x:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10},maxTicksLimit:10},grid:{color:'rgba(255,255,255,0.03)'},border:{display:false}},
+              y:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10},callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'k':'$'+v},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+  });
+  document.getElementById('projLegend').innerHTML=[
+    {c:'#3b9eff',l:'Portfolio Value'},{c:'#f5a623',l:'Annual Dividends'},{c:'#4d555f',l:'No Growth Baseline'}
+  ].map(i=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:${i.c};border-radius:1px"></span><span style="color:var(--tx2)">${i.l}</span></span>`).join('');
+  const fp=pvArr[pvArr.length-1],fd=divArr[divArr.length-1];
+  const tc2=useCon?con*12*yrs:0;
+  document.getElementById('projSum').innerHTML=[
+    {v:fmt(fp,0),l:`Portfolio yr ${yrs}`,c:'var(--bl)'},{v:fmt(fd,0),l:'Annual divs then',c:'var(--am)'},
+    {v:fmt(fp-sv-tc2,0),l:'Total appreciation',c:'var(--gr)'},{v:(fp>0?(fd/fp*100):0).toFixed(2)+'%',l:'Future yield',c:'var(--tl)'},
+  ].map(i=>`<div style="text-align:center"><div class="ps-v" style="color:${i.c}">${i.v}</div><div class="ps-l">${i.l}</div></div>`).join('');
+}
+
+// ══════════════════ CALCULATOR ══════════════════
+function runCalc(){
+  const inv=parseFloat(document.getElementById('ci1').value)||0;
+  const yld=parseFloat(document.getElementById('ci2').value)||0;
+  const dg=parseFloat(document.getElementById('ci3').value)||0;
+  const pg=parseFloat(document.getElementById('ci4').value)||0;
+  const yrs=Math.max(1,parseInt(document.getElementById('ci5').value)||10);
+  const freq=parseInt(document.getElementById('ci6').value)||4;
+  const extra=parseFloat(document.getElementById('ci7').value)||0;
+  const drip=document.getElementById('calcDrip').classList.contains('on');
+  let pv=inv,ann=inv*(yld/100),totDiv=0;
+  const rows=[];
+  for(let y=1;y<=yrs;y++){
+    const c2=extra*12;
+    totDiv+=ann;
+    if(drip) pv=(pv+ann+c2)*(1+pg/100);
+    else pv=(pv+c2)*(1+pg/100);
+    ann=(ann*(1+dg/100))+(drip?ann:0)*(yld/100)+(c2*(yld/100));
+    if(y<=3||y%Math.max(1,Math.floor(yrs/6))===0||y===yrs) rows.push({y,pv,ann,pp:ann/freq});
+  }
+  document.getElementById('calcResults').innerHTML=[
+    {v:fmt(pv,0),l:'Final Portfolio',c:'var(--bl)'},{v:fmt(ann),l:`Annual Income Yr ${yrs}`,c:'var(--am)'},
+    {v:fmt(ann/freq),l:'Per Payment',c:'var(--tl)'},{v:fmt(totDiv,0),l:'Total Divs Received',c:'var(--gr)'},
+    {v:fmt(pv-inv-extra*12*yrs,0),l:'Capital Appreciation',c:'var(--pu)'},{v:(pv>0?(ann/pv*100):0).toFixed(2)+'%',l:`Yield Yr ${yrs}`,c:'var(--rd)'},
+  ].map(i=>`<div class="rc"><div class="rc-lbl">${i.l}</div><div class="rc-val" style="color:${i.c}">${i.v}</div></div>`).join('');
+  document.getElementById('calcTable').innerHTML=
+    `<tr style="border-bottom:1px solid var(--b2)"><td style="color:var(--tx3)">Year</td><td style="color:var(--tx3)">Portfolio</td><td style="color:var(--tx3)">Annual Income</td><td style="color:var(--tx3)">Per Payment</td></tr>`+
+    rows.map(r=>`<tr><td>${r.y}</td><td>${fmt(r.pv,0)}</td><td style="color:var(--am)">${fmt(r.ann)}</td><td style="color:var(--tl)">${fmt(r.pp)}</td></tr>`).join('');
+}
+
+function buildQuickStats(){
+  const te=stocks.reduce((a,s)=>a+s.equity,0),ta=stocks.reduce((a,s)=>a+s.annDiv,0);
+  const tc=stocks.reduce((a,s)=>a+s.costBasis,0),tr=stocks.reduce((a,s)=>a+s.totalReturn,0);
+  document.getElementById('quickStats').innerHTML=[
+    {v:fmt(te,0),l:'Portfolio Value',c:'var(--bl)'},{v:fmt(ta),l:'Annual Income',c:'var(--am)'},
+    {v:fmt(ta/12),l:'Monthly Income',c:'var(--tl)'},{v:(te>0?(ta/te*100):0).toFixed(2)+'%',l:'Current Yield',c:'var(--tl)'},
+    {v:(tc>0?(ta/tc*100):0).toFixed(2)+'%',l:'Yield on Cost',c:'var(--pu)'},{v:fmt(tr,0),l:'Total Return',c:tr>=0?'var(--gr)':'var(--rd)'},
+  ].map(i=>`<div class="rc"><div class="rc-lbl">${i.l}</div><div class="rc-val" style="color:${i.c}">${i.v}</div></div>`).join('');
+}
+
+// Seed calc yield from portfolio
+function seedCalcYield(){
+  const te=stocks.reduce((a,s)=>a+s.equity,0);
+  const ta=stocks.reduce((a,s)=>a+s.annDiv,0);
+  const el=document.getElementById('ci2');
+  if(el&&(!el.value||parseFloat(el.value)===0)) el.value=(te>0?(ta/te*100):0).toFixed(2);
+}
+
+// ══════════════════ TAX ESTIMATE ══════════════════
+// 2025 Federal tax brackets for long-term cap gains / qualified dividends
+const QDIV_BRACKETS = {
+  single:    [{max:47025,rate:0},{max:518900,rate:0.15},{max:Infinity,rate:0.20}],
+  mfj:       [{max:94050,rate:0},{max:583750,rate:0.15},{max:Infinity,rate:0.20}],
+  mfs:       [{max:47025,rate:0},{max:291850,rate:0.15},{max:Infinity,rate:0.20}],
+  hoh:       [{max:63000,rate:0},{max:551350,rate:0.15},{max:Infinity,rate:0.20}],
+};
+const ORD_BRACKETS = {
+  single:    [{max:11925,rate:0.10},{max:48475,rate:0.12},{max:103350,rate:0.22},{max:197300,rate:0.24},{max:250525,rate:0.32},{max:626350,rate:0.35},{max:Infinity,rate:0.37}],
+  mfj:       [{max:23850,rate:0.10},{max:96950,rate:0.12},{max:206700,rate:0.22},{max:394600,rate:0.24},{max:501050,rate:0.32},{max:751600,rate:0.35},{max:Infinity,rate:0.37}],
+  mfs:       [{max:11925,rate:0.10},{max:48475,rate:0.12},{max:103350,rate:0.22},{max:197300,rate:0.24},{max:250525,rate:0.32},{max:375800,rate:0.35},{max:Infinity,rate:0.37}],
+  hoh:       [{max:17000,rate:0.10},{max:64850,rate:0.12},{max:103350,rate:0.22},{max:197300,rate:0.24},{max:250500,rate:0.32},{max:626350,rate:0.35},{max:Infinity,rate:0.37}],
+};
+
+function taxOnOrdinary(income,status){
+  let tax=0,prev=0;
+  for(const b of ORD_BRACKETS[status]){
+    if(income<=prev)break;
+    const chunk=Math.min(income,b.max)-prev;
+    tax+=chunk*b.rate;
+    prev=b.max;
+  }
+  return tax;
+}
+
+function qualifiedDivRate(income,status){
+  const br=QDIV_BRACKETS[status];
+  for(const b of br){ if(income<=b.max) return b.rate; }
+  return 0.20;
+}
+
+function runTax(){
+  document.getElementById('txCustomRow').style.display=
+    document.getElementById('txIncSrc').value==='custom'?'':'none';
+  const status=document.getElementById('txStatus').value;
+  const ordIncome=parseFloat(document.getElementById('txIncome').value)||0;
+  const stateRate=(parseFloat(document.getElementById('txState').value)||0)/100;
+  const qualPct=(parseFloat(document.getElementById('txQual').value)||0)/100;
+  const rocPct=(parseFloat(document.getElementById('txROC').value)||0)/100;
+  const ta=stocks.reduce((a,s)=>a+s.annDiv,0);
+  const useCustom=document.getElementById('txIncSrc').value==='custom';
+  const divIncome=useCustom?(parseFloat(document.getElementById('txCustom').value)||0):ta;
+  const qualAmt=divIncome*qualPct;
+  const ordAmt=divIncome*(1-qualPct-rocPct);
+  const rocAmt=divIncome*rocPct;
+  // Marginal rate on ordinary divs (added on top of income)
+  const marginalOrdRate=(taxOnOrdinary(ordIncome+ordAmt,status)-taxOnOrdinary(ordIncome,status));
+  const qualRate=qualifiedDivRate(ordIncome,status);
+  const fedOnQual=qualAmt*qualRate;
+  const fedOnOrd=marginalOrdRate;
+  const totalFed=fedOnQual+fedOnOrd;
+  const stateDiv=(qualAmt+ordAmt)*stateRate;
+  const totalTax=totalFed+stateDiv;
+  const afterTax=divIncome-totalTax;
+  const effRate=divIncome>0?(totalTax/divIncome*100):0;
+
+  document.getElementById('taxMetrics').innerHTML=[
+    {v:fmt(divIncome),l:'Gross Annual Dividends',c:'var(--am)'},
+    {v:fmt(totalTax),l:'Est. Total Tax',c:'var(--rd)'},
+    {v:fmt(afterTax),l:'After-Tax Income',c:'var(--gr)'},
+    {v:effRate.toFixed(1)+'%',l:'Effective Tax Rate',c:'var(--pu)'},
+  ].map(i=>`<div class="tax-metric"><div class="lbl">${i.l}</div><div class="val" style="color:${i.c}">${i.v}</div></div>`).join('');
+
+  document.getElementById('taxBreak').innerHTML=`<div class="tbd-row"><span class="tbd-label">Qualified dividends</span><span class="tbd-val" style="color:var(--bl)">${fmt(qualAmt)} @ ${(qualRate*100).toFixed(0)}%</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">Ordinary dividends</span><span class="tbd-val" style="color:var(--am)">${fmt(ordAmt)} @ ${(ordIncome>0?(marginalOrdRate/ordAmt*100):0).toFixed(1)}%</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">Return of capital (deferred)</span><span class="tbd-val" style="color:var(--tx2)">${fmt(rocAmt)} @ 0%</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">Federal tax on qual. divs</span><span class="tbd-val" style="color:var(--rd)">${fmt(fedOnQual)}</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">Federal tax on ord. divs</span><span class="tbd-val" style="color:var(--rd)">${fmt(fedOnOrd)}</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">State tax estimate</span><span class="tbd-val" style="color:var(--rd)">${fmt(stateDiv)}</span></div>`+
+    `<div class="tbd-row" style="border-top:1px solid var(--b2);margin-top:4px;"><span class="tbd-label" style="font-weight:600;color:var(--tx)">Net after-tax (annual)</span><span class="tbd-val" style="color:var(--gr);font-size:15px;">${fmt(afterTax)}</span></div>`+
+    `<div class="tbd-row"><span class="tbd-label">Net after-tax (monthly)</span><span class="tbd-val" style="color:var(--gr)">${fmt(afterTax/12)}</span></div>`;
+
+  document.getElementById('taxBars').innerHTML=`<div style="margin-bottom:8px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Income breakdown</div>`+
+    [
+      {l:'After-Tax Income',v:afterTax,max:divIncome,c:'#2ecc71'},
+      {l:'Federal Tax (qual.)',v:fedOnQual,max:divIncome,c:'#e74c3c'},
+      {l:'Federal Tax (ord.)',v:fedOnOrd,max:divIncome,c:'#c0392b'},
+      {l:'State Tax',v:stateDiv,max:divIncome,c:'#9b59b6'},
+      {l:'Return of Capital',v:rocAmt,max:divIncome,c:'#4d555f'},
+    ].map(r=>`<div class="tax-bar-row"><span class="tax-bar-label">${r.l}</span><div class="tax-bar-track"><div class="tax-bar-fill" style="width:${divIncome>0?(r.v/divIncome*100).toFixed(1):0}%;background:${r.c}"></div></div><span class="tax-bar-amount">${fmt(r.v)}</span></div>`).join('');
+
+  document.getElementById('taxNote').textContent=
+    `Based on 2025 federal tax brackets. State rate of ${(stateRate*100).toFixed(2)}% applied to taxable dividends. Return of capital reduces cost basis and is tax-deferred until sale. ET (MLP) may generate K-1 income taxed as ordinary. BEPC distributions may be partially return of capital. Always consult a qualified tax professional.`;
+
+  // Per-holding table
+  document.getElementById('taxTbody').innerHTML=[...stocks].sort((a,b)=>b.annDiv-a.annDiv).map(s=>{
+    const divTypeQualPct = s.divType==='qualified'?1 : s.divType==='ordinary'?0 : s.divType==='roc'?0 : 0.7;
+    const squal=s.annDiv*divTypeQualPct;
+    const sord=s.annDiv*(1-divTypeQualPct);
+    const sfed=squal*qualRate + sord*(ordIncome>0?marginalOrdRate/Math.max(ordAmt,1):0.22);
+    const sat=s.annDiv-sfed-s.annDiv*stateRate;
+    return `<tr>
+      <td><div class="sn" title="${s.name}">${s.name}</div></td>
+      <td class="r"><span class="sym-b">${s.symbol}</span></td>
+      <td class="r num" style="color:var(--am)">${fmt(s.annDiv)}</td>
+      <td class="r num" style="color:var(--bl)">${fmt(squal)}</td>
+      <td class="r num" style="color:var(--am)">${fmt(sord)}</td>
+      <td class="r num" style="color:var(--rd)">${fmt(sfed)}</td>
+      <td class="r num" style="color:var(--gr)">${fmt(sat)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════ TAB SWITCHING ══════════════════
+const ALL_TABS=['holdings','calendar','projection','calculator','tax'];
+function showTab(t,btn){
+  ALL_TABS.forEach(id=>document.getElementById('tab-'+id).style.display='none');
+  document.getElementById('tab-'+t).style.display='';
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(t==='calendar')buildCalendar();
+  if(t==='projection')buildProjection();
+  if(t==='calculator'){seedCalcYield();runCalc();buildQuickStats();}
+  if(t==='tax')runTax();
+}
+
+// ══════════════════ REFRESH ALL ══════════════════
+function refreshAll(){
+  calcAll();
+  updateTopBar();
+  renderHoldings();
+  buildDonut();
+  buildBar();
+  if(document.getElementById('tab-calendar').style.display!=='none')buildCalendar();
+  if(document.getElementById('tab-projection').style.display!=='none')buildProjection();
+  if(document.getElementById('tab-calculator').style.display!=='none'){runCalc();buildQuickStats();}
+  if(document.getElementById('tab-tax').style.display!=='none')runTax();
+}
+
+// ══════════════════ BALANCE VISIBILITY ══════════════════
+let valuesVisible = true;
+function toggleValuesVisible(){
+  valuesVisible = !valuesVisible;
+  document.querySelector('.app').classList.toggle('values-hidden', !valuesVisible);
+  document.getElementById('visIcon').textContent = valuesVisible ? '👁' : '🙈';
+  document.getElementById('visLabel').textContent = valuesVisible ? 'Hide Balances' : 'Show Balances';
+  const btn = document.getElementById('visToggleBtn');
+  btn.style.borderColor = valuesVisible ? 'var(--b2)' : 'var(--bl)';
+  btn.style.color = valuesVisible ? 'var(--tx2)' : 'var(--bl)';
+}
+
+// ══════════════════ INIT ══════════════════
+calcAll();
+updateTopBar();
+renderHoldings();
+buildDonut();
+buildBar();
+seedCalcYield();
+</script>
+</body>
+</html>
