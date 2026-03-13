@@ -1334,6 +1334,9 @@ function refreshAll(){
   if(document.getElementById('tab-invest').style.display!=='none')runInvest();
   if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
   if(document.getElementById('tab-fund').style.display!=='none'){loadFundSettings();buildFund();}
+  // Persist after every refresh
+  savePortfolio();
+  saveTabSettings();
 }
 
 
@@ -1840,12 +1843,7 @@ function showSaveToast(msg){
   t._timer = setTimeout(() => t.style.opacity='0', 2000);
 }
 
-// Auto-save wrapper — patches refreshAll to also save
-const _origRefreshAll = refreshAll;
-function refreshAll(){
-  _origRefreshAll();
-  savePortfolio();
-}
+
 
 
 // ══════════════════ TAB SETTINGS PERSISTENCE ══════════════════
