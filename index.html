@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dividend Portfolio Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -246,6 +247,31 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
       <div class="annual" id="topAnnual">—</div>
       <div class="sub">≈ <span id="topMonthly">—</span>/mo · <span id="topWeekly">—</span>/wk</div>
     </div>
+  </div>
+</div>
+
+
+<!-- WALLET BAR -->
+<div id="walletBar" style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);margin-bottom:12px;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;flex-wrap:wrap;">
+    <button id="walletBtn" onclick="connectWallet()" style="display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--r6);border:1px solid var(--b3);background:var(--s2);color:var(--tx);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;">
+      <span style="font-size:15px;">🦊</span> <span id="walletBtnText">Connect Wallet</span>
+    </button>
+    <div id="walletAddress" style="display:none;font-family:var(--mono);font-size:11px;color:var(--tx2);background:var(--s2);padding:5px 10px;border-radius:5px;border:1px solid var(--b1);"></div>
+    <div id="walletNetChip" style="display:none;" class="chip c-gr"></div>
+    <div id="walletEth" style="display:none;font-family:var(--mono);font-size:12px;font-weight:500;"></div>
+    <div id="walletTotalChip" style="display:none;" class="chip c-bl"></div>
+    <button id="walletRefreshBtn" onclick="refreshWalletBalances()" style="display:none;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--tx2);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;" onmouseover="this.style.color='var(--bl)'" onmouseout="this.style.color='var(--tx2)'">↻ Refresh</button>
+    <button id="walletDisconnectBtn" onclick="disconnectWallet()" style="display:none;background:transparent;border:1px solid var(--b2);border-radius:5px;color:var(--tx3);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;" onmouseover="this.style.color='var(--rd)'" onmouseout="this.style.color='var(--tx3)'">Disconnect</button>
+    <span id="walletStatus" style="font-size:11px;color:var(--tx3);margin-left:auto;">Connect MetaMask or any EVM wallet to view on-chain balances alongside your portfolio</span>
+  </div>
+  <!-- Token balances row -->
+  <div id="walletTokens" style="display:none;padding:0 14px 12px;display:none;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="walletTokenList"></div>
+  </div>
+  <!-- Net worth comparison -->
+  <div id="walletNetWorth" style="display:none;border-top:1px solid var(--b1);padding:10px 14px;display:none;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;" id="walletNWGrid"></div>
   </div>
 </div>
 
@@ -1738,6 +1764,217 @@ function buildFund(){
   </tr>`).join('');
 }
 
+
+// ══════════════════ WEB3 WALLET ══════════════════
+let walletProvider = null;
+let walletSigner   = null;
+let walletAddress  = null;
+let walletChainId  = null;
+let walletTokenBalances = {};
+
+// Tokens to auto-detect — covers your staking tokens + common stable/ETH
+const KNOWN_TOKENS = [
+  {symbol:'ETH',  name:'Ethereum',        decimals:18, isNative:true,  color:'#627eea'},
+  {symbol:'USDC', name:'USD Coin',         decimals:6,  color:'#2775ca',
+    addresses:{1:'0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', 42161:'0xaf88d065e77c8cC2239327C5EDb3A432268e5831', 8453:'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'}},
+  {symbol:'USDT', name:'Tether',           decimals:6,  color:'#26a17b',
+    addresses:{1:'0xdAC17F958D2ee523a2206206994597C13D831ec7', 42161:'0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'}},
+  {symbol:'WETH', name:'Wrapped ETH',      decimals:18, color:'#627eea',
+    addresses:{1:'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', 42161:'0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', 8453:'0x4200000000000000000000000000000000000006'}},
+  {symbol:'GRAIL',name:'Camelot GRAIL',    decimals:18, color:'#f5a623',
+    addresses:{42161:'0x3d9907F9a368ad0a51Be60f7Da3Cb9Fe426783b1'}},
+  {symbol:'xGRAIL',name:'Camelot xGRAIL', decimals:18, color:'#f5a623',
+    addresses:{42161:'0x3CAaE25Ee616f2C8E13C74dA0813402eae3F496b'}},
+  {symbol:'PENDLE',name:'Pendle',          decimals:18, color:'#1abc9c',
+    addresses:{1:'0x808507121B80c02388fAd14726482e061B8da827', 42161:'0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8'}},
+  {symbol:'CYPH', name:'Cypher',           decimals:18, color:'#9b59b6',
+    addresses:{42161:'0x3b9786F2c8e2f2b4bf7D85A100F0D4B0e8d5EB8B'}},
+];
+
+const CHAIN_NAMES = {1:'Ethereum',42161:'Arbitrum',8453:'Base',10:'Optimism',137:'Polygon',56:'BSC'};
+const ERC20_ABI = ['function balanceOf(address owner) view returns (uint256)','function decimals() view returns (uint8)','function symbol() view returns (string)'];
+
+async function connectWallet(){
+  if(walletAddress){ await refreshWalletBalances(); return; }
+  const btn = document.getElementById('walletBtn');
+  const status = document.getElementById('walletStatus');
+
+  if(typeof window.ethereum === 'undefined'){
+    status.textContent = '⚠ No wallet detected. Install MetaMask or use a Web3 browser.';
+    status.style.color = 'var(--rd)';
+    return;
+  }
+  try{
+    btn.style.opacity = '0.6';
+    document.getElementById('walletBtnText').textContent = 'Connecting…';
+    status.textContent = 'Awaiting wallet approval…';
+
+    walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+    await walletProvider.send('eth_requestAccounts', []);
+    walletSigner  = walletProvider.getSigner();
+    walletAddress = await walletSigner.getAddress();
+    const network = await walletProvider.getNetwork();
+    walletChainId = network.chainId;
+
+    // Listen for chain/account changes
+    window.ethereum.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
+    window.ethereum.on('chainChanged', () => location.reload());
+
+    showWalletConnected();
+    await refreshWalletBalances();
+
+    // Persist address for display
+    try{ localStorage.setItem('wallet_address', walletAddress); }catch(e){}
+
+  }catch(e){
+    status.textContent = e.code===4001 ? 'Connection rejected.' : 'Connection failed: '+e.message;
+    status.style.color = 'var(--rd)';
+    document.getElementById('walletBtnText').textContent = 'Connect Wallet';
+    btn.style.opacity = '1';
+  }
+}
+
+function showWalletConnected(){
+  const short = walletAddress.slice(0,6)+'…'+walletAddress.slice(-4);
+  document.getElementById('walletBtnText').textContent = 'Wallet Connected';
+  document.getElementById('walletBtn').style.borderColor = 'var(--gr)';
+  document.getElementById('walletBtn').style.color = 'var(--gr)';
+  document.getElementById('walletBtn').style.opacity = '1';
+  document.getElementById('walletAddress').textContent = short;
+  document.getElementById('walletAddress').style.display = '';
+  document.getElementById('walletAddress').title = walletAddress;
+  const chain = CHAIN_NAMES[walletChainId] || 'Chain '+walletChainId;
+  const netChip = document.getElementById('walletNetChip');
+  netChip.textContent = chain;
+  netChip.style.display = '';
+  document.getElementById('walletRefreshBtn').style.display = '';
+  document.getElementById('walletDisconnectBtn').style.display = '';
+  document.getElementById('walletStatus').textContent = 'Fetching balances…';
+}
+
+async function refreshWalletBalances(){
+  if(!walletProvider || !walletAddress) return;
+  const status = document.getElementById('walletStatus');
+  status.textContent = 'Fetching on-chain balances…';
+  status.style.color = 'var(--tx3)';
+
+  walletTokenBalances = {};
+  let totalUSD = 0;
+
+  // Native ETH/gas token
+  try{
+    const bal = await walletProvider.getBalance(walletAddress);
+    const ethBal = parseFloat(ethers.utils.formatEther(bal));
+    walletTokenBalances['ETH'] = {balance: ethBal, usd: null, symbol:'ETH', color:'#627eea'};
+    document.getElementById('walletEth').textContent = ethBal.toFixed(4)+' ETH';
+    document.getElementById('walletEth').style.display = '';
+  }catch(e){}
+
+  // ERC-20 tokens on current chain
+  const chainTokens = KNOWN_TOKENS.filter(t => !t.isNative && t.addresses?.[walletChainId]);
+  const tokenResults = [];
+
+  for(const tok of chainTokens){
+    try{
+      const contract = new ethers.Contract(tok.addresses[walletChainId], ERC20_ABI, walletProvider);
+      const raw = await contract.balanceOf(walletAddress);
+      const balance = parseFloat(ethers.utils.formatUnits(raw, tok.decimals));
+      if(balance > 0.0001){
+        walletTokenBalances[tok.symbol] = {balance, symbol:tok.symbol, name:tok.name, color:tok.color};
+        tokenResults.push({...tok, balance});
+      }
+    }catch(e){}
+  }
+
+  // Also scan for any unknown ERC-20s from staking positions
+  for(const sp of stakePositions){
+    if(walletTokenBalances[sp.token]) continue;
+    // already covered or no known address
+  }
+
+  renderWalletTokens(tokenResults);
+  renderWalletNetWorth();
+  status.textContent = 'Last updated: '+new Date().toLocaleTimeString();
+  status.style.color = 'var(--tx3)';
+}
+
+function renderWalletTokens(tokens){
+  const ethEntry = walletTokenBalances['ETH'];
+  const allTokens = ethEntry ? [{symbol:'ETH', name:'Ethereum', balance:ethEntry.balance, color:'#627eea'}, ...tokens] : tokens;
+
+  if(allTokens.length === 0){
+    document.getElementById('walletTokens').style.display = 'none';
+    return;
+  }
+  document.getElementById('walletTokens').style.display = '';
+  document.getElementById('walletTokenList').innerHTML = allTokens.map(t => {
+    const isStaking = stakePositions.some(s => s.token === t.symbol);
+    return `<div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r8);padding:7px 12px;">
+      <span style="width:8px;height:8px;background:${t.color||'var(--tx2)'};border-radius:50%;flex-shrink:0"></span>
+      <span style="font-family:var(--mono);font-weight:600;font-size:13px;">${parseFloat(t.balance).toLocaleString(undefined,{maximumFractionDigits:4})}</span>
+      <span style="font-size:11px;color:var(--tx2);">${t.symbol}</span>
+      ${isStaking?'<span class="chip c-am" style="padding:1px 6px;font-size:9px;border-radius:3px;">staking</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function renderWalletNetWorth(){
+  const portfolioVal = stocks.reduce((a,s)=>a+s.equity,0);
+  const stakingVal   = stakePositions.reduce((a,s)=>a+s.usd,0);
+  const totalPortfolio = portfolioVal + stakingVal;
+
+  document.getElementById('walletNetWorth').style.display = '';
+  document.getElementById('walletTotalChip').style.display = '';
+
+  const ethBal = walletTokenBalances['ETH']?.balance || 0;
+  const usdcBal = (walletTokenBalances['USDC']?.balance||0) + (walletTokenBalances['USDT']?.balance||0);
+
+  document.getElementById('walletTotalChip').textContent = '◆ Wallet connected';
+  document.getElementById('walletNWGrid').innerHTML = [
+    {v:fmt(portfolioVal,0), l:'Stock Portfolio', c:'var(--bl)'},
+    {v:fmt(stakingVal,0),   l:'DeFi / Staking',  c:'var(--am)'},
+    {v:ethBal.toFixed(4)+' ETH', l:'Wallet ETH',  c:'#627eea'},
+    {v:fmt(usdcBal,0),      l:'Wallet Stables',  c:'var(--gr)'},
+  ].map(i=>`<div class="mc a1" style="margin:0"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c};font-size:16px">${i.v}</div></div>`).join('');
+}
+
+function disconnectWallet(){
+  walletProvider = null; walletSigner = null; walletAddress = null; walletChainId = null; walletTokenBalances = {};
+  try{ localStorage.removeItem('wallet_address'); }catch(e){}
+  document.getElementById('walletBtnText').textContent = 'Connect Wallet';
+  document.getElementById('walletBtn').style.borderColor = 'var(--b3)';
+  document.getElementById('walletBtn').style.color = 'var(--tx)';
+  document.getElementById('walletAddress').style.display = 'none';
+  document.getElementById('walletNetChip').style.display = 'none';
+  document.getElementById('walletEth').style.display = 'none';
+  document.getElementById('walletTotalChip').style.display = 'none';
+  document.getElementById('walletRefreshBtn').style.display = 'none';
+  document.getElementById('walletDisconnectBtn').style.display = 'none';
+  document.getElementById('walletTokens').style.display = 'none';
+  document.getElementById('walletNetWorth').style.display = 'none';
+  document.getElementById('walletStatus').textContent = 'Connect MetaMask or any EVM wallet to view on-chain balances alongside your portfolio';
+  document.getElementById('walletStatus').style.color = 'var(--tx3)';
+}
+
+// Auto-reconnect if previously connected (silent, no prompt)
+async function tryAutoReconnect(){
+  if(typeof window.ethereum === 'undefined') return;
+  try{
+    const accounts = await window.ethereum.request({method:'eth_accounts'});
+    if(accounts.length > 0){
+      walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+      walletSigner   = walletProvider.getSigner();
+      walletAddress  = accounts[0];
+      const network  = await walletProvider.getNetwork();
+      walletChainId  = network.chainId;
+      window.ethereum.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
+      window.ethereum.on('chainChanged', () => location.reload());
+      showWalletConnected();
+      await refreshWalletBalances();
+    }
+  }catch(e){}
+}
+
 // ══════════════════ BALANCE VISIBILITY ══════════════════
 let valuesVisible = true;
 function toggleValuesVisible(){
@@ -1949,6 +2186,7 @@ buildDonut();
 buildBar();
 seedCalcYield();
 renderStaking();
+tryAutoReconnect();
 </script>
 </body>
 </html>
