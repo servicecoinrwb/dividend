@@ -862,19 +862,42 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div style="font-size:16px;font-weight:600;">What each tab does</div>
       </div>
       <div style="padding:14px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        ${[
-          {tab:'Holdings',color:'var(--bl)',desc:'Your live portfolio — edit shares, prices, yields inline. All changes auto-save.'},
-          {tab:'Dividend Calendar',color:'var(--am)',desc:'See which months each holding pays. Useful for planning cash flow.'},
-          {tab:'Growth Projection',color:'var(--gr)',desc:'Model where your portfolio goes with DRIP + contributions over decades.'},
-          {tab:'Calculator',color:'var(--tl)',desc:'Standalone income calculator — model any investment scenario.'},
-          {tab:'Tax Estimate',color:'var(--pu)',desc:'Estimate your dividend tax bill using 2025 federal brackets.'},
-          {tab:'Invest $X',color:'var(--bl)',desc:'Enter any amount and see how to allocate it across your holdings.'},
-          {tab:'Staking / DeFi',color:'var(--am)',desc:'Track your on-chain staking positions — APY, weekly income, pending rewards.'},
-          {tab:'Fund View',color:'var(--tl)',desc:'See everything combined as a single fund — AUM, NAV, income sources.'},
-        ].map(t=>`<div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
-          <div style="width:3px;background:${t.color};border-radius:2px;flex-shrink:0"></div>
-          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">${t.tab}</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">${t.desc}</div></div>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--bl);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Holdings</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Your live portfolio — edit shares, prices, yields inline. All changes auto-save.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--am);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Dividend Calendar</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">See which months each holding pays. Useful for planning cash flow.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--gr);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Growth Projection</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Model where your portfolio goes with DRIP + contributions over decades.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--tl);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Calculator</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Standalone income calculator — model any investment scenario.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--pu);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Tax Estimate</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Estimate your dividend tax bill using 2025 federal brackets.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--bl);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Invest $X</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Enter any amount and see how to allocate it across your holdings.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--am);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Staking / DeFi</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">Track your on-chain staking positions — APY, weekly income, pending rewards.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--tl);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">Fund View</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">See everything combined as a single fund — AUM, NAV, income sources.</div></div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:var(--tx2);border-radius:2px;flex-shrink:0;margin-top:2px;"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">📖 Guide</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">You are here — concepts, glossary, and plain-English explanations of every metric.</div></div>
+        </div>
       </div>
     </div>
 
@@ -886,27 +909,78 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
       </div>
       <div style="padding:14px 22px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          ${[
-            ['AUM','Assets Under Management — total portfolio value'],
-            ['NAV','Net Asset Value — AUM ÷ shares issued'],
-            ['Yield','Annual income ÷ current value × 100'],
-            ['YOC','Yield on Cost — income ÷ what you paid'],
-            ['DRIP','Dividend Reinvestment Plan — auto-buy more shares'],
-            ['Alpha','Outperformance vs benchmark'],
-            ['APY','Annual Percentage Yield — DeFi staking rate'],
-            ['Epoch','DeFi payment cycle, usually weekly'],
-            ['xToken','Locked/staked governance token (xGRAIL, xCYPH)'],
-            ['sPENDLE','Staked PENDLE earning protocol fees'],
-            ['Qualified Div.','Dividends taxed at 0/15/20% cap gains rate'],
-            ['Ordinary Div.','Dividends taxed at your regular income rate'],
-            ['K-1','Tax form from MLPs like ET — complex filing'],
-            ['ROC','Return of Capital — not taxed now, reduces cost basis'],
-            ['Cost Basis','Total amount you paid for all shares'],
-            ['Equity','Current market value of a position'],
-          ].map(([term,def])=>`<div style="padding:8px 10px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);">
-            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl)">${term}</span>
-            <span style="font-size:11px;color:var(--tx2);margin-left:8px;">${def}</span>
-          </div>`).join('')}
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">AUM</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Assets Under Management — the total dollar value of your entire portfolio</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">NAV</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Net Asset Value — AUM divided by shares issued. Tracks performance over time.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Yield</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Annual income ÷ current market value × 100. Changes daily with price.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">YOC</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Yield on Cost — annual income ÷ what you originally paid. Only goes up.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">DRIP</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Dividend Reinvestment Plan — using dividends to automatically buy more shares</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Alpha</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Outperformance vs a benchmark. Yield alpha = your yield minus benchmark yield.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">APY</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Annual Percentage Yield — the annualized rate of return on DeFi staking</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Epoch</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">DeFi reward cycle — usually weekly. Rewards accumulate then are claimable.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">xToken</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Locked/staked governance token e.g. xGRAIL, xCYPH. Earns protocol revenue.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">sPENDLE</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Staked PENDLE token. Earns a share of Pendle protocol fees weekly.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Qualified Div.</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Dividends taxed at lower capital gains rates: 0%, 15%, or 20%</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Ordinary Div.</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Dividends taxed at your regular income tax rate — higher than qualified</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">K-1</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Tax form issued by partnerships like ET (MLP). More complex than a 1099.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">ROC</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Return of Capital — not taxed now but reduces your cost basis for future tax</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Cost Basis</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Total amount you paid for all shares. Used to calculate gains and YOC.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">Equity</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Current market value of a position: shares × current price</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">MLP</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Master Limited Partnership — ET is one. High yield, complex taxes via K-1.</span>
+          </div>
+          <div style="padding:9px 11px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);display:flex;gap:10px;align-items:flex-start;">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl);min-width:90px;flex-shrink:0;">ETF</span>
+            <span style="font-size:11px;color:var(--tx2);line-height:1.6;">Exchange Traded Fund — SCHD, JEPI, PAVE, SGOV are ETFs in your portfolio</span>
+          </div>
         </div>
       </div>
     </div>
