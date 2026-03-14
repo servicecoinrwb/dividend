@@ -313,6 +313,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <button class="tb" onclick="showTab('invest',this)">Invest $X</button>
   <button class="tb" onclick="showTab('staking',this)">Staking / DeFi</button>
   <button class="tb" onclick="showTab('fund',this)">Fund View</button>
+  <button class="tb" onclick="showTab('explainer',this)">📖 Guide</button>
 </div>
 
 <!-- ══════════ HOLDINGS TAB ══════════ -->
@@ -724,6 +725,192 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
       <button class="btn" onclick="closeStakeModal()">Cancel</button>
       <button class="btn btn-solid" onclick="saveStake()">Save Position</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ EXPLAINER TAB ══════════ -->
+<div id="tab-explainer" style="display:none;">
+  <div style="max-width:860px;margin:0 auto;">
+
+    <!-- LIVE STATS BANNER -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);padding:18px 22px;margin-bottom:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="expLiveStats"></div>
+
+    <!-- SECTION: What is this? -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,rgba(59,158,255,0.12),rgba(26,188,156,0.08));padding:20px 24px;border-bottom:1px solid var(--b1);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--bl);margin-bottom:6px;font-weight:500;">Overview</div>
+        <div style="font-size:20px;font-weight:600;margin-bottom:8px;">What is this portfolio?</div>
+        <div style="font-size:13px;color:var(--tx2);line-height:1.8;" id="expOverviewText"></div>
+      </div>
+    </div>
+
+    <!-- SECTION: Fund Concepts -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);background:rgba(245,166,35,0.05);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--am);margin-bottom:4px;font-weight:500;">Fund Concepts</div>
+        <div style="font-size:16px;font-weight:600;">Understanding AUM, NAV &amp; Yield</div>
+      </div>
+      <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;">
+
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;padding-bottom:14px;border-bottom:1px solid var(--b1);">
+          <div style="background:var(--am-d);border-radius:var(--r8);padding:12px;text-align:center;">
+            <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--am)" id="expAUM">—</div>
+            <div style="font-size:10px;color:var(--am);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;">Your AUM</div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:5px;">AUM — Assets Under Management</div>
+            <div style="font-size:13px;color:var(--tx2);line-height:1.8;">The total dollar value of everything you own across stocks and DeFi staking positions. This is the equivalent of a mutual fund's total pool of money. When your stocks go up in price or you add more shares, AUM grows. When prices fall, AUM shrinks. Think of it as your fund's "size."</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;padding-bottom:14px;border-bottom:1px solid var(--b1);">
+          <div style="background:var(--bl-d);border-radius:var(--r8);padding:12px;text-align:center;">
+            <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--bl)" id="expNAV">—</div>
+            <div style="font-size:10px;color:var(--bl);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;">NAV/Share</div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:5px;">NAV — Net Asset Value per Share</div>
+            <div style="font-size:13px;color:var(--tx2);line-height:1.8;">NAV = Total AUM ÷ Shares Issued. If your fund has <span id="expAUMInline" style="font-family:var(--mono);color:var(--bl)">—</span> in assets and you issued <span id="expSharesInline" style="font-family:var(--mono);color:var(--bl)">—</span> units, each unit is worth <span id="expNAVInline" style="font-family:var(--mono);color:var(--bl)">—</span>. Real ETFs like SCHD work the same way — SCHD has ~$60B AUM divided by ~1.7B shares = ~$27/share NAV. As your portfolio grows, your NAV rises. This is how you track performance over time.</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;padding-bottom:14px;border-bottom:1px solid var(--b1);">
+          <div style="background:var(--gr-d);border-radius:var(--r8);padding:12px;text-align:center;">
+            <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--gr)" id="expYield">—</div>
+            <div style="font-size:10px;color:var(--gr);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;">Fund Yield</div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:5px;">Portfolio Yield</div>
+            <div style="font-size:13px;color:var(--tx2);line-height:1.8;">Your blended yield is total annual income ÷ AUM. Your fund generates <span id="expIncInline" style="font-family:var(--mono);color:var(--am)">—</span> per year from dividends and staking rewards on <span id="expAUM2" style="font-family:var(--mono);color:var(--bl)">—</span> in assets. The S&amp;P 500 yields about 1.3% — your fund yields significantly more because you deliberately selected high-yield dividend stocks and DeFi staking positions.</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:16px;align-items:start;">
+          <div style="background:var(--tl-d);border-radius:var(--r8);padding:12px;text-align:center;">
+            <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--tl)" id="expAlpha">—</div>
+            <div style="font-size:10px;color:var(--tl);text-transform:uppercase;letter-spacing:.07em;margin-top:3px;">Yield Alpha</div>
+          </div>
+          <div>
+            <div style="font-weight:600;margin-bottom:5px;">Yield Alpha — Beating the Benchmark</div>
+            <div style="font-size:13px;color:var(--tx2);line-height:1.8;">Alpha is how much you outperform a benchmark. Your yield alpha is your fund yield minus the benchmark yield. A positive alpha means your portfolio generates more income per dollar invested than the benchmark. This does not mean higher total return — higher yield sometimes comes with lower price appreciation — but for income-focused investing, yield alpha is the key metric.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: Yield on Cost -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);background:rgba(155,89,182,0.06);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--pu);margin-bottom:4px;font-weight:500;">Key Metrics</div>
+        <div style="font-size:16px;font-weight:600;">Yield on Cost vs Current Yield</div>
+      </div>
+      <div style="padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="background:var(--pu-d);border-radius:var(--r6);padding:8px 14px;font-family:var(--mono);font-size:18px;font-weight:600;color:var(--pu)" id="expYOC">—</div>
+            <div style="font-weight:600;">Yield on Cost (YOC)</div>
+          </div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.8;">What you earn relative to what you actually paid. If you bought ENB at $47.57 and it now yields 6.1% on the current price of $54.11 — your personal yield on cost is actually <span style="font-family:var(--mono);color:var(--pu)">~6.9%</span> because you paid less. YOC only ever goes up as dividends grow and your cost stays fixed. Long-term dividend investors focus on YOC over current yield.</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="background:var(--tl-d);border-radius:var(--r6);padding:8px 14px;font-family:var(--mono);font-size:18px;font-weight:600;color:var(--tl)" id="expCurYield">—</div>
+            <div style="font-weight:600;">Current Yield</div>
+          </div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.8;">What a new investor would earn buying today at market price. Current yield changes daily as stock prices move — if a stock drops, the yield rises (same dividend ÷ lower price). If a stock rallies, yield falls. Your current portfolio yield is the blended rate across all positions at today's prices.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: DRIP -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);background:rgba(46,204,113,0.05);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gr);margin-bottom:4px;font-weight:500;">Strategy</div>
+        <div style="font-size:16px;font-weight:600;">DRIP — Dividend Reinvestment Plan</div>
+      </div>
+      <div style="padding:18px 22px;">
+        <div style="font-size:13px;color:var(--tx2);line-height:1.8;margin-bottom:14px;">DRIP means automatically using dividend payments to buy more shares instead of taking cash. This creates compounding — more shares → more dividends → even more shares. Over 20 years the difference is dramatic:</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="expDripCards"></div>
+        <div style="font-size:12px;color:var(--tx3);margin-top:12px;padding:10px;background:var(--s2);border-radius:var(--r6);">These projections use your current portfolio value of <span id="expDripBase" style="font-family:var(--mono);color:var(--bl)">—</span>, your blended yield, and assume 5% annual price growth. DRIP assumes all dividends are reinvested immediately. Actual results will vary.</div>
+      </div>
+    </div>
+
+    <!-- SECTION: DeFi vs Stocks -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);background:rgba(245,166,35,0.06);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--am);margin-bottom:4px;font-weight:500;">Asset Classes</div>
+        <div style="font-size:16px;font-weight:600;">Dividend Stocks vs DeFi Staking</div>
+      </div>
+      <div style="padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-weight:600;color:var(--bl);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:var(--bl);border-radius:2px;display:inline-block"></span>Dividend Stocks (<span id="expStockPct">—</span>)</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.8;margin-bottom:10px;">Regulated, publicly traded companies that share profits quarterly. SCHD, ENB, JEPI etc. Yields typically 2–8%. More stable, SEC-regulated, liquid on any trading day. Dividends are often "qualified" meaning lower tax rates (0–20% vs ordinary income rates). Price appreciation adds to total return.</div>
+          <div id="expStockList" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--am);margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:var(--am);border-radius:2px;display:inline-block"></span>DeFi Staking (<span id="expDefiPct">—</span>)</div>
+          <div style="font-size:13px;color:var(--tx2);line-height:1.8;margin-bottom:10px;">On-chain yield from locking governance tokens. Camelot (xGRAIL), Cypher (xCYPH), Pendle (sPENDLE). Yields 19–92% APY. Higher yield but higher risk — smart contract risk, token price volatility, protocol risk. Rewards paid in native tokens which fluctuate in USD value. Not regulated.</div>
+          <div id="expDefiList" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: Tab Guide -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:12px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:4px;font-weight:500;">Navigation</div>
+        <div style="font-size:16px;font-weight:600;">What each tab does</div>
+      </div>
+      <div style="padding:14px 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${[
+          {tab:'Holdings',color:'var(--bl)',desc:'Your live portfolio — edit shares, prices, yields inline. All changes auto-save.'},
+          {tab:'Dividend Calendar',color:'var(--am)',desc:'See which months each holding pays. Useful for planning cash flow.'},
+          {tab:'Growth Projection',color:'var(--gr)',desc:'Model where your portfolio goes with DRIP + contributions over decades.'},
+          {tab:'Calculator',color:'var(--tl)',desc:'Standalone income calculator — model any investment scenario.'},
+          {tab:'Tax Estimate',color:'var(--pu)',desc:'Estimate your dividend tax bill using 2025 federal brackets.'},
+          {tab:'Invest $X',color:'var(--bl)',desc:'Enter any amount and see how to allocate it across your holdings.'},
+          {tab:'Staking / DeFi',color:'var(--am)',desc:'Track your on-chain staking positions — APY, weekly income, pending rewards.'},
+          {tab:'Fund View',color:'var(--tl)',desc:'See everything combined as a single fund — AUM, NAV, income sources.'},
+        ].map(t=>`<div style="display:flex;gap:10px;padding:10px;background:var(--s2);border-radius:var(--r8);">
+          <div style="width:3px;background:${t.color};border-radius:2px;flex-shrink:0"></div>
+          <div><div style="font-weight:600;font-size:12px;margin-bottom:3px;">${t.tab}</div><div style="font-size:11px;color:var(--tx2);line-height:1.6;">${t.desc}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- SECTION: Glossary -->
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);margin-bottom:16px;overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid var(--b1);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:4px;font-weight:500;">Reference</div>
+        <div style="font-size:16px;font-weight:600;">Glossary</div>
+      </div>
+      <div style="padding:14px 22px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${[
+            ['AUM','Assets Under Management — total portfolio value'],
+            ['NAV','Net Asset Value — AUM ÷ shares issued'],
+            ['Yield','Annual income ÷ current value × 100'],
+            ['YOC','Yield on Cost — income ÷ what you paid'],
+            ['DRIP','Dividend Reinvestment Plan — auto-buy more shares'],
+            ['Alpha','Outperformance vs benchmark'],
+            ['APY','Annual Percentage Yield — DeFi staking rate'],
+            ['Epoch','DeFi payment cycle, usually weekly'],
+            ['xToken','Locked/staked governance token (xGRAIL, xCYPH)'],
+            ['sPENDLE','Staked PENDLE earning protocol fees'],
+            ['Qualified Div.','Dividends taxed at 0/15/20% cap gains rate'],
+            ['Ordinary Div.','Dividends taxed at your regular income rate'],
+            ['K-1','Tax form from MLPs like ET — complex filing'],
+            ['ROC','Return of Capital — not taxed now, reduces cost basis'],
+            ['Cost Basis','Total amount you paid for all shares'],
+            ['Equity','Current market value of a position'],
+          ].map(([term,def])=>`<div style="padding:8px 10px;background:var(--s2);border-radius:var(--r6);border-left:2px solid var(--b3);">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--bl)">${term}</span>
+            <span style="font-size:11px;color:var(--tx2);margin-left:8px;">${def}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div><!-- /app -->
@@ -1334,7 +1521,7 @@ function runTax(){
 }
 
 // ══════════════════ TAB SWITCHING ══════════════════
-const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest','staking','fund'];
+const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest','staking','fund','explainer'];
 function showTab(t,btn){
   ALL_TABS.forEach(id=>document.getElementById('tab-'+id).style.display='none');
   document.getElementById('tab-'+t).style.display='';
@@ -1360,6 +1547,7 @@ function refreshAll(){
   if(document.getElementById('tab-invest').style.display!=='none')runInvest();
   if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
   if(document.getElementById('tab-fund').style.display!=='none'){loadFundSettings();buildFund();}
+  if(document.getElementById('tab-explainer').style.display!=='none')buildExplainer();
   // Persist after every refresh
   savePortfolio();
   saveTabSettings();
@@ -1973,6 +2161,74 @@ async function tryAutoReconnect(){
       await refreshWalletBalances();
     }
   }catch(e){}
+}
+
+
+// ══════════════════ EXPLAINER ══════════════════
+function buildExplainer(){
+  const te   = stocks.reduce((a,s)=>a+s.equity,0);
+  const ta   = stocks.reduce((a,s)=>a+s.annDiv,0);
+  const tc   = stocks.reduce((a,s)=>a+s.costBasis,0);
+  const sv   = stakePositions.reduce((a,s)=>a+s.usd,0);
+  const sa   = stakePositions.reduce((a,s)=>a+stakeAnnualIncome(s),0);
+  const aum  = te+sv, inc=ta+sa;
+  const nav  = aum/(parseFloat(document.getElementById('fundShares')?.value)||1000);
+  const yld  = aum>0?inc/aum*100:0;
+  const yoc  = tc>0?ta/tc*100:0;
+  const bYld = parseFloat(document.getElementById('fundBenchYield')?.value)||1.3;
+  const alpha= yld-bYld;
+  const curYield = aum>0?inc/aum*100:0;
+
+  // Live stats banner
+  document.getElementById('expLiveStats').innerHTML=[
+    {v:fmt(aum,0),l:'Total AUM',c:'var(--bl)'},
+    {v:'$'+nav.toFixed(2),l:'NAV / Share',c:'var(--tx)'},
+    {v:fmt(inc,0)+'/yr',l:'Annual Income',c:'var(--am)'},
+    {v:yld.toFixed(2)+'%',l:'Fund Yield',c:'var(--gr)'},
+  ].map(i=>`<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:5px;">${i.l}</div><div style="font-family:var(--mono);font-size:20px;font-weight:600;color:${i.c}">${i.v}</div></div>`).join('');
+
+  // Overview text
+  const shares = parseFloat(document.getElementById('fundShares')?.value)||1000;
+  document.getElementById('expOverviewText').innerHTML =
+    `You are running a <strong style="color:var(--tx)">self-managed income fund</strong> with <strong style="color:var(--bl)">${fmt(aum,0)}</strong> in total assets across <strong style="color:var(--tx)">${stocks.length} dividend stocks</strong> and <strong style="color:var(--am)">${stakePositions.length} DeFi staking positions</strong>. The fund generates <strong style="color:var(--am)">${fmt(inc,0)}/yr</strong> in income — that's <strong style="color:var(--am)">${fmt(inc/12)}/mo</strong> or <strong style="color:var(--am)">${fmt(inc/52)}/wk</strong>. At a blended yield of <strong style="color:var(--gr)">${yld.toFixed(2)}%</strong>, you are earning <strong style="color:var(--tl)">${alpha>=0?'+':''}${alpha.toFixed(2)}% more</strong> than the S&P 500 benchmark yield of ${bYld}%.`;
+
+  // Fund concept inline values
+  const setT = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setT('expAUM',  fmt(aum,0));
+  setT('expNAV',  '$'+nav.toFixed(2));
+  setT('expYield',yld.toFixed(2)+'%');
+  setT('expAlpha',(alpha>=0?'+':'')+alpha.toFixed(2)+'%');
+  setT('expYOC',  yoc.toFixed(2)+'%');
+  setT('expCurYield', curYield.toFixed(2)+'%');
+  setT('expAUMInline',  fmt(aum,0));
+  setT('expSharesInline',shares.toLocaleString()+' shares');
+  setT('expNAVInline',  '$'+nav.toFixed(4));
+  setT('expIncInline',  fmt(inc,0));
+  setT('expAUM2',       fmt(aum,0));
+  setT('expDripBase',   fmt(aum,0));
+
+  // DRIP comparison cards
+  const growDrip   = (pv,y,gr,yr) => { let v=pv,d=pv*y; for(let i=0;i<yr;i++){v=(v+d)*(1+gr);d=v*y;} return {v,d}; };
+  const y10drip    = growDrip(aum,inc/aum,0.05,10);
+  const y10nodrip  = {v:aum*(1.05**10),d:inc};
+  const y20drip    = growDrip(aum,inc/aum,0.05,20);
+  document.getElementById('expDripCards').innerHTML=[
+    {v:fmt(y10nodrip.v,0),d:fmt(y10nodrip.d,0),l:'10 yrs — No DRIP',c:'var(--tx2)'},
+    {v:fmt(y10drip.v,0),  d:fmt(y10drip.d,0),  l:'10 yrs — With DRIP',c:'var(--gr)'},
+    {v:fmt(y20drip.v,0),  d:fmt(y20drip.d,0),  l:'20 yrs — With DRIP',c:'var(--am)'},
+  ].map(i=>`<div style="background:var(--s2);border-radius:var(--r8);padding:14px;border:1px solid var(--b1);">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px;">${i.l}</div>
+    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:${i.c};margin-bottom:4px;">${i.v}</div>
+    <div style="font-size:11px;color:var(--tx2);">Annual income: <span style="font-family:var(--mono);color:var(--am)">${i.d}</span></div>
+  </div>`).join('');
+
+  // DeFi vs Stocks
+  const stPct = aum>0?(te/aum*100).toFixed(0)+'%':'—';
+  const dfPct = aum>0?(sv/aum*100).toFixed(0)+'%':'—';
+  setT('expStockPct', stPct+' of AUM');
+  setT('expDefiPct',  dfPct+' of AUM');
+  document.getElementById('expStockList').innerHTML = stocks.slice(0,6).map(s=>`<span class="sym-b">${s.symbol}</span>`).join('')+'<span style="font-size:11px;color:var(--tx3)"> +${stocks.length-6} more</span>';
+  document.getElementById('expDefiList').innerHTML  = stakePositions.map(s=>`<span class="chip c-am" style="font-size:10px;padding:2px 8px;">${s.token}</span>`).join('');
 }
 
 // ══════════════════ BALANCE VISIBILITY ══════════════════
