@@ -314,6 +314,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <button class="tb" onclick="showTab('staking',this)">Staking / DeFi</button>
   <button class="tb" onclick="showTab('fund',this)">Fund View</button>
   <button class="tb" onclick="showTab('explainer',this)">📖 Guide</button>
+  <button class="tb" onclick="showTab('roth',this)">Roth IRA</button>
 </div>
 
 <!-- ══════════ HOLDINGS TAB ══════════ -->
@@ -987,6 +988,115 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
 
   </div>
 </div>
+
+<!-- ══════════ ROTH IRA TAB ══════════ -->
+<div id="tab-roth" style="display:none;">
+
+  <!-- Roth Summary metrics -->
+  <div class="metrics" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px;" id="rothMetrics"></div>
+
+  <!-- Charts row -->
+  <div class="charts-row" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="ch" style="border:none;padding-bottom:6px;"><span class="ct">IRA Allocation</span></div>
+      <div style="padding:4px 14px 10px;"><div style="position:relative;height:170px;"><canvas id="rothDonut"></canvas></div></div>
+      <div id="rothDonutLegend" style="padding:0 12px 12px;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10px;color:var(--tx2);"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Holdings Performance</span></div>
+      <div style="padding:10px 14px 8px;"><div style="position:relative;height:188px;"><canvas id="rothBarChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- Combined view toggle -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="ch">
+      <span class="ct">Combined Portfolio View</span>
+      <span style="font-size:11px;color:var(--tx3);">Taxable + Roth IRA together</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;" id="rothCombined"></div>
+  </div>
+
+  <!-- Holdings table -->
+  <div class="card">
+    <div class="ch">
+      <span class="ct">Roth IRA Holdings</span>
+      <div class="ch-actions">
+        <span style="font-size:11px;color:var(--tx3);margin-right:8px;">Tax-free growth — no capital gains, no dividend tax</span>
+        <button class="btn btn-green btn-sm" onclick="openRothModal()">+ Add Holding</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortRoth('name')">Name</th>
+          <th class="r" onclick="sortRoth('symbol')">Symbol</th>
+          <th class="r" onclick="sortRoth('shares')">Shares</th>
+          <th class="r" onclick="sortRoth('price')">Price</th>
+          <th class="r" onclick="sortRoth('avgCost')">Avg Cost</th>
+          <th class="r" onclick="sortRoth('totalReturn')">Return $</th>
+          <th class="r" onclick="sortRoth('returnPct')">Return %</th>
+          <th class="r" onclick="sortRoth('equity')">Equity</th>
+          <th class="r">Div Yield %</th>
+          <th class="r" onclick="sortRoth('annDiv')">Ann. Income</th>
+          <th class="r">Type</th>
+          <th class="r">Actions</th>
+        </tr></thead>
+        <tbody id="rothTbody"></tbody>
+      </table>
+    </div>
+    <div class="footer">Roth IRA — contributions made with after-tax dollars. All growth and qualified withdrawals are tax-free. Dividends and capital gains are never taxed inside the account.</div>
+  </div>
+
+  <!-- Roth vs Taxable tax benefit -->
+  <div class="card" style="margin-top:0;">
+    <div class="ch"><span class="ct">Tax Benefit Estimate — Roth vs Taxable Account</span></div>
+    <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px;" id="rothTaxBenefit"></div>
+  </div>
+
+</div>
+
+<!-- ROTH MODAL -->
+<div class="modal-overlay" id="rothModalOverlay" onclick="if(event.target===this)closeRothModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="rothModalTitle">Add Roth IRA Holding</span>
+      <button class="modal-close" onclick="closeRothModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg full"><label>Company / Fund Name</label><input type="text" id="rfName" placeholder="e.g. Realty Income Corp"></div>
+        <div class="fg"><label>Ticker Symbol</label><input type="text" id="rfSymbol" placeholder="O" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Shares</label><input type="number" id="rfShares" placeholder="0" step="any"></div>
+        <div class="fg"><label>Current Price ($)</label><input type="number" id="rfPrice" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Avg Cost / Share ($)</label><input type="number" id="rfAvgCost" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>Dividend Yield (%)</label><input type="number" id="rfYield" placeholder="0.0" step="0.1"></div>
+        <div class="fg"><label>Holding Type</label>
+          <select id="rfType">
+            <option value="growth">Growth Stock</option>
+            <option value="dividend">Dividend Stock</option>
+            <option value="reit">REIT</option>
+            <option value="etf">ETF</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Payment Frequency</label>
+          <select id="rfFreq">
+            <option value="M">Monthly</option>
+            <option value="Q" selected>Quarterly</option>
+            <option value="A">Annual</option>
+            <option value="none">None (growth)</option>
+          </select>
+        </div>
+      </div>
+      <div id="rothPreview" style="margin-top:12px;padding:10px;background:var(--s2);border-radius:var(--r8);font-size:12px;color:var(--tx2);"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeRothModal()">Cancel</button>
+      <button class="btn btn-solid" onclick="saveRothHolding()">Save</button>
+    </div>
+  </div>
+</div>
 </div><!-- /app -->
 
 <!-- ══════════ ADD/EDIT MODAL ══════════ -->
@@ -1595,7 +1705,7 @@ function runTax(){
 }
 
 // ══════════════════ TAB SWITCHING ══════════════════
-const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest','staking','fund','explainer'];
+const ALL_TABS=['holdings','calendar','projection','calculator','tax','invest','staking','fund','explainer','roth'];
 function showTab(t,btn){
   ALL_TABS.forEach(id=>document.getElementById('tab-'+id).style.display='none');
   document.getElementById('tab-'+t).style.display='';
@@ -1622,6 +1732,7 @@ function refreshAll(){
   if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
   if(document.getElementById('tab-fund').style.display!=='none'){loadFundSettings();buildFund();}
   if(document.getElementById('tab-explainer').style.display!=='none')buildExplainer();
+  if(document.getElementById('tab-roth').style.display!=='none')renderRoth();
   // Persist after every refresh
   savePortfolio();
   saveTabSettings();
@@ -2305,6 +2416,207 @@ function buildExplainer(){
   document.getElementById('expDefiList').innerHTML  = stakePositions.map(s=>`<span class="chip c-am" style="font-size:10px;padding:2px 8px;">${s.token}</span>`).join('');
 }
 
+
+// ══════════════════ ROTH IRA ══════════════════
+const ROTH_KEY = 'roth_ira_v1';
+let rothStocks = [
+  {id:1,  name:'Realty Income',               symbol:'O',    shares:6.01,    price:52.43, avgCost:51.47, totalReturn:5.77,  yield:5.8, freq:'M',  type:'reit'},
+  {id:2,  name:'Dow Jones ETF',               symbol:'DJIA', shares:1,       price:21.41, avgCost:21.89, totalReturn:-0.48, yield:1.2, freq:'Q',  type:'etf'},
+  {id:3,  name:'Vertiv Holdings',             symbol:'VRT',  shares:0.003953,price:115.32,avgCost:104.37,totalReturn:0.04,  yield:0.1, freq:'Q',  type:'growth'},
+  {id:4,  name:'Super Micro Computer',        symbol:'SMCI', shares:0.092309,price:31.84, avgCost:32.49, totalReturn:-0.06, yield:0.0, freq:'none',type:'growth'},
+  {id:5,  name:'NVIDIA',                      symbol:'NVDA', shares:0.005505,price:110.88,avgCost:108.67,totalReturn:0.01,  yield:0.0, freq:'Q',  type:'growth'},
+  {id:6,  name:'Palantir',                    symbol:'PLTR', shares:0.025248,price:91.14, avgCost:87.58, totalReturn:0.09,  yield:0.0, freq:'none',type:'growth'},
+  {id:7,  name:'Applied Digital',             symbol:'APLD', shares:0.885021,price:24.29, avgCost:23.94, totalReturn:0.31,  yield:0.0, freq:'none',type:'growth'},
+  {id:8,  name:'VICI Properties',             symbol:'VICI', shares:5,       price:28.56, avgCost:29.02, totalReturn:-2.29, yield:5.5, freq:'Q',  type:'reit'},
+  {id:9,  name:'Datavault AI',                symbol:'DTCR', shares:4,       price:24.97, avgCost:25.00, totalReturn:-0.12, yield:0.0, freq:'none',type:'growth'},
+  {id:10, name:'Ares Capital',                symbol:'ARCC', shares:7.01,    price:22.45, avgCost:21.86, totalReturn:0.41,  yield:9.2, freq:'Q',  type:'dividend'},
+];
+let nextRothId = 11;
+let rothEditId = null;
+let rothSortKey = 'equity', rothSortDir = -1;
+
+function calcRoth(s){
+  s.equity      = s.shares * s.price;
+  s.costBasis   = s.shares * s.avgCost;
+  s.totalReturn = s.equity - s.costBasis;
+  s.returnPct   = s.costBasis > 0 ? (s.totalReturn / s.costBasis) * 100 : 0;
+  s.annDiv      = s.equity * (s.yield / 100);
+  s.monthDiv    = s.annDiv / 12;
+}
+function calcAllRoth(){ rothStocks.forEach(calcRoth); }
+
+function saveRothData(){
+  try{ localStorage.setItem(ROTH_KEY, JSON.stringify({stocks:rothStocks, nextRothId})); }catch(e){}
+}
+function loadRothData(){
+  try{
+    const raw = localStorage.getItem(ROTH_KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d?.stocks?.length){ rothStocks=d.stocks; nextRothId=d.nextRothId||20; calcAllRoth(); return; }
+    }
+    calcAllRoth();
+    saveRothData();
+  }catch(e){ calcAllRoth(); }
+}
+
+const ROTH_COLORS = ['#e74c3c','#9b59b6','#3b9eff','#1abc9c','#f5a623','#27ae60','#e67e22','#2980b9','#8e44ad','#16a085','#d35400','#c0392b'];
+const TYPE_COLORS = {growth:'var(--bl)',dividend:'var(--am)',reit:'var(--gr)',etf:'var(--tl)',other:'var(--tx2)'};
+const TYPE_LABELS = {growth:'Growth',dividend:'Dividend',reit:'REIT',etf:'ETF',other:'Other'};
+
+function renderRoth(){
+  calcAllRoth();
+  const te  = rothStocks.reduce((a,s)=>a+s.equity,0);
+  const tr  = rothStocks.reduce((a,s)=>a+s.totalReturn,0);
+  const ta  = rothStocks.reduce((a,s)=>a+s.annDiv,0);
+  const tc  = rothStocks.reduce((a,s)=>a+s.costBasis,0);
+  const yld = te>0?(ta/te*100):0;
+
+  // Metrics
+  document.getElementById('rothMetrics').innerHTML=[
+    {v:fmt(te,0),    l:'Roth IRA Value',    c:'var(--bl)', a:'a1'},
+    {v:(tr>=0?'+':'')+fmt(tr,0), l:'Total Return', c:tr>=0?'var(--gr)':'var(--rd)', a:'a2'},
+    {v:fmt(ta),      l:'Ann. Dividends',    c:'var(--am)', a:'a3'},
+    {v:yld.toFixed(2)+'%', l:'Yield',       c:'var(--tl)', a:'a4'},
+    {v:rothStocks.length+' holdings', l:'Positions', c:'var(--pu)', a:'a5'},
+  ].map(i=>`<div class="mc ${i.a}" style="margin:0"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c}">${i.v}</div><div class="ms">${i.a==='a2'?(tc>0?fmtPct(tr/tc*100)+' on cost':''):'tax-free account'}</div></div>`).join('');
+
+  // Donut
+  if(window._rothDonutCh) window._rothDonutCh.destroy();
+  const ds = [...rothStocks].sort((a,b)=>b.equity-a.equity);
+  window._rothDonutCh = new Chart(document.getElementById('rothDonut'),{
+    type:'doughnut',
+    data:{labels:ds.map(s=>s.symbol),datasets:[{data:ds.map(s=>+s.equity.toFixed(2)),backgroundColor:ROTH_COLORS,borderWidth:0,hoverOffset:5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw,0)} (${(c.raw/te*100).toFixed(1)}%)`}}}}
+  });
+  document.getElementById('rothDonutLegend').innerHTML=ds.map((s,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;background:${ROTH_COLORS[i%ROTH_COLORS.length]};border-radius:1px;flex-shrink:0"></span>${s.symbol} ${(s.equity/te*100).toFixed(0)}%</span>`).join('');
+
+  // Bar chart — return %
+  if(window._rothBarCh) window._rothBarCh.destroy();
+  const sorted = [...rothStocks].sort((a,b)=>b.returnPct-a.returnPct);
+  window._rothBarCh = new Chart(document.getElementById('rothBarChart'),{
+    type:'bar',
+    data:{labels:sorted.map(s=>s.symbol),datasets:[{data:sorted.map(s=>+s.returnPct.toFixed(2)),backgroundColor:sorted.map(s=>s.returnPct>=0?'#2ecc71aa':'#e74c3caa'),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw>=0?'+':''}${c.raw.toFixed(2)}%`}}},
+      scales:{x:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10}},grid:{display:false},border:{display:false}},
+              y:{ticks:{color:'#4d555f',font:{family:"'DM Mono',monospace",size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}
+  });
+
+  // Combined view
+  const taxTE = stocks.reduce((a,s)=>a+s.equity,0);
+  const taxTA = stocks.reduce((a,s)=>a+s.annDiv,0);
+  const stakeV= stakePositions.reduce((a,s)=>a+s.usd,0);
+  const stakeA= stakePositions.reduce((a,s)=>a+stakeAnnualIncome(s),0);
+  const totalAll = taxTE + stakeV + te;
+  const totalInc = taxTA + stakeA + ta;
+  document.getElementById('rothCombined').innerHTML=[
+    {v:fmt(taxTE,0),  l:'Taxable — Stocks',   c:'var(--bl)'},
+    {v:fmt(stakeV,0), l:'DeFi / Staking',      c:'var(--am)'},
+    {v:fmt(te,0),     l:'Roth IRA',            c:'var(--gr)'},
+    {v:fmt(totalAll,0),l:'Total Net Worth',    c:'var(--tx)'},
+  ].map(i=>`<div class="mc a1" style="margin:0"><div class="ml">${i.l}</div><div class="mv" style="color:${i.c}">${i.v}</div></div>`).join('');
+
+  // Tax benefit
+  const fedRate = 0.15, stateRate = 0.0425;
+  const taxOnDivs = ta * (fedRate + stateRate);
+  const taxOnGains = Math.max(0,tr) * fedRate;
+  const years20 = ta * 20;
+  const taxSaved20 = years20 * (fedRate + stateRate);
+  document.getElementById('rothTaxBenefit').innerHTML = `
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:12px;">Annual Tax Savings vs Taxable Account</div>
+      <div class="tbd-row"><span class="tbd-label">Roth IRA annual dividends</span><span class="tbd-val" style="color:var(--am)">${fmt(ta)}</span></div>
+      <div class="tbd-row"><span class="tbd-label">Tax you'd pay in taxable account</span><span class="tbd-val" style="color:var(--rd)">${fmt(taxOnDivs)}</span></div>
+      <div class="tbd-row"><span class="tbd-label">Tax on unrealized gains if taxable</span><span class="tbd-val" style="color:var(--rd)">${fmt(taxOnGains)}</span></div>
+      <div class="tbd-row" style="border-top:1px solid var(--b2);margin-top:4px;"><span class="tbd-label" style="color:var(--tx);font-weight:600">Estimated annual tax saved</span><span class="tbd-val" style="color:var(--gr);font-size:15px;">${fmt(taxOnDivs+taxOnGains)}</span></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--tx);margin-bottom:12px;">20-Year Tax Benefit Projection</div>
+      <div class="tbd-row"><span class="tbd-label">Total dividends over 20 yrs</span><span class="tbd-val" style="color:var(--am)">${fmt(years20,0)}</span></div>
+      <div class="tbd-row"><span class="tbd-label">Tax saved on dividends alone</span><span class="tbd-val" style="color:var(--gr)">${fmt(taxSaved20,0)}</span></div>
+      <div class="tbd-row"><span class="tbd-label">Qualified withdrawals</span><span class="tbd-val" style="color:var(--gr)">$0 tax (after 59½)</span></div>
+      <div class="tbd-row"><span class="tbd-label">2025 Roth contribution limit</span><span class="tbd-val" style="color:var(--bl)">$7,000/yr ($8,000 if 50+)</span></div>
+      <div class="tbd-row" style="border-top:1px solid var(--b2);margin-top:4px;"><span class="tbd-label" style="color:var(--tx);font-weight:600">Est. 20-yr total tax benefit</span><span class="tbd-val" style="color:var(--gr);font-size:15px;">${fmt(taxSaved20+taxOnGains*20,0)}</span></div>
+    </div>`;
+
+  // Table
+  let data = [...rothStocks];
+  data.sort((a,b)=>{
+    let av=a[rothSortKey],bv=b[rothSortKey];
+    if(typeof av==='string') return rothSortDir*av.localeCompare(bv);
+    return rothSortDir*(av-bv);
+  });
+  const maxEq = Math.max(...rothStocks.map(s=>s.equity),1);
+  document.getElementById('rothTbody').innerHTML = data.map(s=>{
+    const bw = (s.equity/maxEq*100).toFixed(1);
+    const tc2 = TYPE_COLORS[s.type]||'var(--tx2)';
+    const tl  = TYPE_LABELS[s.type]||s.type;
+    return `<tr>
+      <td><div class="sn" title="${s.name}">${s.name}</div></td>
+      <td class="r"><span class="sym-b">${s.symbol}</span></td>
+      <td class="r"><div class="si"><input type="number" value="${fmtN(s.shares)}" step="any" min="0"
+        onchange="rothStocks.find(x=>x.id===${s.id}).shares=parseFloat(this.value)||0;renderRoth();saveRothData();"></div></td>
+      <td class="r num neu">$${s.price.toFixed(2)}</td>
+      <td class="r num neu">$${s.avgCost.toFixed(2)}</td>
+      <td class="r num ${rc(s.totalReturn)}">${fmt(s.totalReturn)}</td>
+      <td class="r num ${rc(s.returnPct)}">${fmtPct(s.returnPct)}</td>
+      <td class="r num neu" style="display:flex;align-items:center;justify-content:flex-end">${fmt(s.equity,0)}<span class="eq-bar"><span class="eq-bar-fill" style="width:${bw}%;background:var(--bl)"></span></span></td>
+      <td class="r"><div class="yi"><input type="number" value="${s.yield.toFixed(1)}" step="0.1" min="0"
+        style="width:54px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--am);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
+        onchange="rothStocks.find(x=>x.id===${s.id}).yield=parseFloat(this.value)||0;renderRoth();saveRothData();"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+      <td class="r num" style="color:var(--am)">${s.annDiv>0?fmt(s.annDiv):'—'}</td>
+      <td class="r"><span style="font-size:10px;font-weight:500;color:${tc2};background:${tc2.replace(')','-d)').replace('var(--','var(--')};padding:2px 7px;border-radius:3px;">${tl}</span></td>
+      <td class="r" style="white-space:nowrap;">
+        <button class="btn btn-sm" onclick="openRothModal(${s.id})">✏ Edit</button>
+        <button class="btn btn-red btn-sm" onclick="removeRoth(${s.id})" style="margin-left:4px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  saveRothData();
+}
+
+function sortRoth(k){ if(rothSortKey===k) rothSortDir*=-1; else{rothSortKey=k;rothSortDir=-1;} renderRoth(); }
+
+function openRothModal(id=null){
+  rothEditId=id;
+  document.getElementById('rothModalOverlay').classList.add('open');
+  document.getElementById('rothModalTitle').textContent=id?'Edit Roth IRA Holding':'Add Roth IRA Holding';
+  if(id){
+    const s=rothStocks.find(x=>x.id===id);
+    document.getElementById('rfName').value=s.name;
+    document.getElementById('rfSymbol').value=s.symbol;
+    document.getElementById('rfShares').value=fmtN(s.shares);
+    document.getElementById('rfPrice').value=s.price;
+    document.getElementById('rfAvgCost').value=s.avgCost;
+    document.getElementById('rfYield').value=s.yield;
+    document.getElementById('rfType').value=s.type||'growth';
+    document.getElementById('rfFreq').value=s.freq||'Q';
+  } else {
+    ['rfName','rfShares','rfPrice','rfAvgCost','rfYield'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('rfSymbol').value='';
+    document.getElementById('rfType').value='growth';
+    document.getElementById('rfFreq').value='Q';
+    document.getElementById('rothPreview').innerHTML='';
+  }
+}
+function closeRothModal(){ document.getElementById('rothModalOverlay').classList.remove('open'); rothEditId=null; }
+function removeRoth(id){ if(!confirm('Remove this Roth IRA holding?'))return; rothStocks=rothStocks.filter(x=>x.id!==id); renderRoth(); }
+function saveRothHolding(){
+  const name=document.getElementById('rfName').value.trim();
+  const symbol=document.getElementById('rfSymbol').value.trim().toUpperCase();
+  const shares=parseFloat(document.getElementById('rfShares').value)||0;
+  const price=parseFloat(document.getElementById('rfPrice').value)||0;
+  const avgCost=parseFloat(document.getElementById('rfAvgCost').value)||price;
+  const yld=parseFloat(document.getElementById('rfYield').value)||0;
+  const type=document.getElementById('rfType').value;
+  const freq=document.getElementById('rfFreq').value;
+  if(!name||!symbol||!price) return alert('Name, symbol and price are required.');
+  if(rothEditId){ Object.assign(rothStocks.find(x=>x.id===rothEditId),{name,symbol,shares,price,avgCost,yield:yld,type,freq}); }
+  else { rothStocks.push({id:nextRothId++,name,symbol,shares,price,avgCost,yield:yld,type,freq}); }
+  closeRothModal(); renderRoth();
+}
+
 // ══════════════════ BALANCE VISIBILITY ══════════════════
 let valuesVisible = true;
 function toggleValuesVisible(){
@@ -2517,6 +2829,7 @@ buildDonut();
 buildBar();
 seedCalcYield();
 renderStaking();
+renderRoth();
 tryAutoReconnect();
 </script>
 </body>
