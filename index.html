@@ -291,6 +291,12 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <span class="pb-time" id="priceTime"></span>
   <button onclick="exportData()" title="Export all portfolio data as JSON backup" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx2);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px;" onmouseover="this.style.color='var(--gr)';this.style.borderColor='var(--gr)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--b2)'">⬇ Export</button>
   <label title="Import a previously exported JSON backup" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx2);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='var(--bl)';this.style.borderColor='var(--bl)'" onmouseout="this.style.color='var(--tx2)';this.style.borderColor='var(--b2)'">⬆ Import<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
+  <a href="https://servicecoinrwb.github.io/Pro-Trade-Calculator/" target="_blank"
+    style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:1px solid var(--b2);background:var(--bl-d);color:var(--bl);font-family:var(--sans);font-size:11px;font-weight:500;text-decoration:none;white-space:nowrap;"
+    onmouseover="this.style.background='rgba(59,158,255,0.25)'" onmouseout="this.style.background='var(--bl-d)'">📈 Trading Desk</a>
+  <a href="https://robinhood.com/?classic=1" target="_blank"
+    style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:1px solid var(--b2);background:var(--gr-d);color:var(--gr);font-family:var(--sans);font-size:11px;font-weight:500;text-decoration:none;white-space:nowrap;"
+    onmouseover="this.style.background='rgba(46,204,113,0.25)'" onmouseout="this.style.background='var(--gr-d)'">🟢 Robinhood</a>
   <button onclick="resetPortfolio()" title="Reset to original data" style="background:transparent;border:1px solid var(--b2);border-radius:6px;color:var(--tx3);font-family:var(--sans);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.color='var(--rd)';this.style.borderColor='var(--rd)'" onmouseout="this.style.color='var(--tx3)';this.style.borderColor='var(--b2)'">↺ Reset</button>
 </div>
 
@@ -2170,14 +2176,31 @@ const KNOWN_TOKENS = [
 const CHAIN_NAMES = {1:'Ethereum',42161:'Arbitrum',8453:'Base',10:'Optimism',137:'Polygon',56:'BSC'};
 const ERC20_ABI = ['function balanceOf(address owner) view returns (uint256)','function decimals() view returns (uint8)','function symbol() view returns (string)'];
 
+async function getEthereumProvider(){
+  // Already available
+  if(window.ethereum) return window.ethereum;
+  // Some wallets (Rabby, Coinbase, etc) inject slightly after load — wait up to 1s
+  return new Promise(resolve => {
+    const t = setTimeout(() => resolve(window.ethereum || null), 1000);
+    window.addEventListener('ethereum#initialized', () => { clearTimeout(t); resolve(window.ethereum); }, {once:true});
+  });
+}
+
 async function connectWallet(){
   if(walletAddress){ await refreshWalletBalances(); return; }
-  const btn = document.getElementById('walletBtn');
+  const btn    = document.getElementById('walletBtn');
   const status = document.getElementById('walletStatus');
 
-  if(typeof window.ethereum === 'undefined'){
-    status.textContent = '⚠ No wallet detected. Install MetaMask or use a Web3 browser.';
-    status.style.color = 'var(--rd)';
+  document.getElementById('walletBtnText').textContent = 'Detecting wallet…';
+  btn.style.opacity = '0.7';
+
+  const provider = await getEthereumProvider();
+
+  if(!provider){
+    document.getElementById('walletBtnText').textContent = 'Connect Wallet';
+    btn.style.opacity = '1';
+    status.innerHTML = 'No Web3 wallet detected. &nbsp;<a href="https://metamask.io/download/" target="_blank" style="color:var(--bl)">Install MetaMask</a> &nbsp;or open in <a href="https://brave.com" target="_blank" style="color:var(--bl)">Brave Browser</a>';
+    status.style.color = 'var(--tx2)';
     return;
   }
   try{
@@ -2185,7 +2208,7 @@ async function connectWallet(){
     document.getElementById('walletBtnText').textContent = 'Connecting…';
     status.textContent = 'Awaiting wallet approval…';
 
-    walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+    walletProvider = new ethers.providers.Web3Provider(provider);
     await walletProvider.send('eth_requestAccounts', []);
     walletSigner  = walletProvider.getSigner();
     walletAddress = await walletSigner.getAddress();
@@ -2193,8 +2216,8 @@ async function connectWallet(){
     walletChainId = network.chainId;
 
     // Listen for chain/account changes
-    window.ethereum.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
-    window.ethereum.on('chainChanged', () => location.reload());
+    provider.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
+    provider.on('chainChanged', () => location.reload());
 
     showWalletConnected();
     await refreshWalletBalances();
@@ -2334,17 +2357,18 @@ function disconnectWallet(){
 
 // Auto-reconnect if previously connected (silent, no prompt)
 async function tryAutoReconnect(){
-  if(typeof window.ethereum === 'undefined') return;
   try{
-    const accounts = await window.ethereum.request({method:'eth_accounts'});
+    const provider = await getEthereumProvider();
+    if(!provider) return;
+    const accounts = await provider.request({method:'eth_accounts'});
     if(accounts.length > 0){
-      walletProvider = new ethers.providers.Web3Provider(window.ethereum);
+      walletProvider = new ethers.providers.Web3Provider(provider);
       walletSigner   = walletProvider.getSigner();
       walletAddress  = accounts[0];
       const network  = await walletProvider.getNetwork();
       walletChainId  = network.chainId;
-      window.ethereum.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
-      window.ethereum.on('chainChanged', () => location.reload());
+      provider.on('accountsChanged', accs => { if(accs.length===0) disconnectWallet(); else { walletAddress=accs[0]; refreshWalletBalances(); }});
+      provider.on('chainChanged', () => location.reload());
       showWalletConnected();
       await refreshWalletBalances();
     }
@@ -2793,26 +2817,6 @@ function loadFundSettings(){ /* handled inside loadAll */ }
 function loadTabSettings() { /* handled inside loadAll */ }
 function loadPortfolio()   { return false; }
 
-
-// ══════════════════ FIREBASE PERSISTENCE ══════════════════
-
-
-
-const db = firebase.firestore();
-const DOC = db.collection('portfolio').doc('data');
-
-
-
-// Direct save — fires immediately on every change
-function saveAll(){
-  // Fire immediately — no debounce, no timer, no race conditions
-  saveAll();
-}
-
-
-
-
-
 function applyPendingSettings(){
   if(window._pendingFundSettings){
     const f = window._pendingFundSettings;
@@ -2936,8 +2940,7 @@ function resetPortfolio(){
 // ══════════════════ MASTER PERSISTENCE ══════════════════
 // ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
 function exportData(){
-  // delegates to the Firebase exportData above
-  _firebaseExport();
+  exportData();
 }
 
 function importData(event){
@@ -2971,7 +2974,7 @@ function savePortfolio(){ saveAll(); }
 function saveStakeData(){ saveAll(); }
 function saveRothData(){  saveAll(); }
 function saveFundSettings(){ saveAll(); }
-function saveAll(){ saveAll(); }
+
 function saveApiKey(val){ avApiKey=val.trim(); saveAll(); }
 function loadPortfolio(){ return false; } // replaced by loadAll
 function loadStakeData(){} 
@@ -3059,41 +3062,7 @@ const STORAGE_KEY = 'dividend_portfolio_v1';
 // ══════════════════ TAB SETTINGS PERSISTENCE ══════════════════
 const SETTINGS_KEY = 'dividend_tab_settings_v1';
 
-function saveAll(){
-  try{
-    const s = {
-      // Projection
-      projYears:  document.getElementById('rYrs')?.value,
-      projContrib:document.getElementById('rCon')?.value,
-      projGrowth: document.getElementById('rGr')?.value,
-      projDivGrow:document.getElementById('rDG')?.value,
-      projDrip:   document.getElementById('dripTog')?.classList.contains('on'),
-      projContribOn: document.getElementById('conTog')?.classList.contains('on'),
-      // Calculator
-      ci1: document.getElementById('ci1')?.value,
-      ci2: document.getElementById('ci2')?.value,
-      ci3: document.getElementById('ci3')?.value,
-      ci4: document.getElementById('ci4')?.value,
-      ci5: document.getElementById('ci5')?.value,
-      ci6: document.getElementById('ci6')?.value,
-      ci7: document.getElementById('ci7')?.value,
-      calcDrip: document.getElementById('calcDrip')?.classList.contains('on'),
-      // Tax
-      txStatus:  document.getElementById('txStatus')?.value,
-      txIncome:  document.getElementById('txIncome')?.value,
-      txState:   document.getElementById('txState')?.value,
-      txQual:    document.getElementById('txQual')?.value,
-      txROC:     document.getElementById('txROC')?.value,
-      txIncSrc:  document.getElementById('txIncSrc')?.value,
-      txCustom:  document.getElementById('txCustom')?.value,
-      // Invest
-      invAmount:   document.getElementById('invAmount')?.value,
-      invStrategy: document.getElementById('invStrategy')?.value,
-      invCustomPcts: customPcts,
-    };
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-  }catch(e){}
-}
+
 
 function loadTabSettings(){
   try{
