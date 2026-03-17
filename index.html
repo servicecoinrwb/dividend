@@ -380,10 +380,10 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
   <div class="card">
     <div class="ch"><span class="ct">Portfolio Growth Projection</span></div>
     <div class="proj-controls">
-      <div class="cg"><div class="cg-lbl">Years</div><div class="cg-val"><span id="pYrs">20</span> yrs</div><input type="range" id="rYrs" min="1" max="40" value="20" oninput="document.getElementById('pYrs').textContent=this.value;buildProjection();saveTabSettings()"></div>
-      <div class="cg"><div class="cg-lbl">Monthly Contribution</div><div class="cg-val">$<span id="pCon">500</span></div><input type="range" id="rCon" min="0" max="5000" step="50" value="500" oninput="document.getElementById('pCon').textContent=Number(this.value).toLocaleString();buildProjection();saveTabSettings()"></div>
-      <div class="cg"><div class="cg-lbl">Price Growth / yr</div><div class="cg-val"><span id="pGr">5.0</span>%</div><input type="range" id="rGr" min="0" max="15" step="0.5" value="5" oninput="document.getElementById('pGr').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveTabSettings()"></div>
-      <div class="cg"><div class="cg-lbl">Dividend Growth / yr</div><div class="cg-val"><span id="pDG">4.0</span>%</div><input type="range" id="rDG" min="0" max="15" step="0.5" value="4" oninput="document.getElementById('pDG').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveTabSettings()"></div>
+      <div class="cg"><div class="cg-lbl">Years</div><div class="cg-val"><span id="pYrs">20</span> yrs</div><input type="range" id="rYrs" min="1" max="40" value="20" oninput="document.getElementById('pYrs').textContent=this.value;buildProjection();saveAll()"></div>
+      <div class="cg"><div class="cg-lbl">Monthly Contribution</div><div class="cg-val">$<span id="pCon">500</span></div><input type="range" id="rCon" min="0" max="5000" step="50" value="500" oninput="document.getElementById('pCon').textContent=Number(this.value).toLocaleString();buildProjection();saveAll()"></div>
+      <div class="cg"><div class="cg-lbl">Price Growth / yr</div><div class="cg-val"><span id="pGr">5.0</span>%</div><input type="range" id="rGr" min="0" max="15" step="0.5" value="5" oninput="document.getElementById('pGr').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveAll()"></div>
+      <div class="cg"><div class="cg-lbl">Dividend Growth / yr</div><div class="cg-val"><span id="pDG">4.0</span>%</div><input type="range" id="rDG" min="0" max="15" step="0.5" value="4" oninput="document.getElementById('pDG').textContent=parseFloat(this.value).toFixed(1);buildProjection();saveAll()"></div>
     </div>
     <div style="padding:8px 16px;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);display:flex;gap:28px;flex-wrap:wrap;">
       <div class="toggle-row"><div class="tog on" id="dripTog" onclick="this.classList.toggle('on');buildProjection()"></div><span class="tog-label">DRIP (reinvest dividends)</span></div>
@@ -400,15 +400,15 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
     <div class="calc-lay">
       <div class="calc-l">
         <div class="cs-title">Income Calculator</div>
-        <div class="cr"><label>Investment Amount ($)</label><input type="number" id="ci1" oninput="runCalc();saveTabSettings()" value="10000" oninput="runCalc()"></div>
+        <div class="cr"><label>Investment Amount ($)</label><input type="number" id="ci1" oninput="runCalc();saveAll()" value="10000" oninput="runCalc()"></div>
         <div class="cr"><label>Dividend Yield (%)</label><input type="number" id="ci2" step="0.01" oninput="runCalc()"></div>
-        <div class="cr"><label>Dividend Growth Rate (% / yr)</label><input type="number" id="ci3" oninput="runCalc();saveTabSettings()" value="4" step="0.1" oninput="runCalc()"></div>
-        <div class="cr"><label>Price Appreciation (% / yr)</label><input type="number" id="ci4" oninput="runCalc();saveTabSettings()" value="5" step="0.1" oninput="runCalc()"></div>
-        <div class="cr"><label>Time Horizon (years)</label><input type="number" id="ci5" oninput="runCalc();saveTabSettings()" value="10" oninput="runCalc()"></div>
+        <div class="cr"><label>Dividend Growth Rate (% / yr)</label><input type="number" id="ci3" oninput="runCalc();saveAll()" value="4" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Price Appreciation (% / yr)</label><input type="number" id="ci4" oninput="runCalc();saveAll()" value="5" step="0.1" oninput="runCalc()"></div>
+        <div class="cr"><label>Time Horizon (years)</label><input type="number" id="ci5" oninput="runCalc();saveAll()" value="10" oninput="runCalc()"></div>
         <div class="cr"><label>Payment Frequency</label>
-          <select id="ci6" onchange="runCalc();saveTabSettings()"><option value="12">Monthly</option><option value="4" selected>Quarterly</option><option value="2">Semi-Annual</option><option value="1">Annual</option></select>
+          <select id="ci6" onchange="runCalc();saveAll()"><option value="12">Monthly</option><option value="4" selected>Quarterly</option><option value="2">Semi-Annual</option><option value="1">Annual</option></select>
         </div>
-        <div class="cr"><label>Extra Monthly Investment ($)</label><input type="number" id="ci7" oninput="runCalc();saveTabSettings()" value="0" oninput="runCalc()"></div>
+        <div class="cr"><label>Extra Monthly Investment ($)</label><input type="number" id="ci7" oninput="runCalc();saveAll()" value="0" oninput="runCalc()"></div>
         <div class="toggle-row" style="margin-top:4px;">
           <div class="tog on" id="calcDrip" onclick="this.classList.toggle('on');runCalc()"></div>
           <span class="tog-label">DRIP (reinvest dividends)</span>
@@ -435,7 +435,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div class="tax-section">
           <div class="tax-section-title">Filing Status & Income</div>
           <div class="tax-row"><label>Filing Status</label>
-            <select id="txStatus" onchange="runTax();saveTabSettings()">
+            <select id="txStatus" onchange="runTax();saveAll()">
               <option value="single">Single</option>
               <option value="mfj" selected>Married Filing Jointly</option>
               <option value="mfs">Married Filing Separately</option>
@@ -453,7 +453,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div class="tax-section">
           <div class="tax-section-title">Override Annual Dividend Income</div>
           <div class="tax-row"><label>Use portfolio total or custom amount</label>
-            <select id="txIncSrc" onchange="runTax();saveTabSettings()"><option value="portfolio">Use Portfolio Total</option><option value="custom">Custom Amount</option></select>
+            <select id="txIncSrc" onchange="runTax();saveAll()"><option value="portfolio">Use Portfolio Total</option><option value="custom">Custom Amount</option></select>
           </div>
           <div class="tax-row" id="txCustomRow" style="display:none;"><label>Custom Annual Dividends ($)</label><input type="number" id="txCustom" value="1300" oninput="runTax()"></div>
         </div>
@@ -494,11 +494,11 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
           <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Amount to Invest ($)</label>
           <input type="number" id="invAmount" value="1000"  min="0" step="50"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r8);color:var(--tx);font-family:var(--mono);font-size:22px;font-weight:600;padding:10px 14px;width:100%;outline:none;"
-            oninput="runInvest();saveTabSettings()">
+            oninput="runInvest();saveAll()">
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;">
           <label style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Allocation Strategy</label>
-          <select id="invStrategy" onchange="runInvest();saveTabSettings()"
+          <select id="invStrategy" onchange="runInvest();saveAll()"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--sans);font-size:13px;padding:9px 11px;outline:none;">
             <option value="equal">Equal Weight — split evenly across all holdings</option>
             <option value="current">Match Current Weights — maintain portfolio %</option>
@@ -616,7 +616,7 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
         <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin-bottom:4px;">Fund Name</div>
         <input id="fundName" type="text" value="My Dividend &amp; Yield Fund"
           style="background:transparent;border:none;border-bottom:1px solid var(--b2);color:var(--tx);font-family:var(--sans);font-size:22px;font-weight:600;width:360px;outline:none;padding-bottom:3px;"
-          oninput="saveFundSettings()">
+          oninput="saveAll()">
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-width:400px;" id="fundKPIs"></div>
     </div>
@@ -631,25 +631,25 @@ input[type=range]{width:100%;accent-color:var(--bl);cursor:pointer;}
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Total Shares / Units Issued</label>
           <input type="number" id="fundShares" value="1000" min="1"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:16px;padding:8px 10px;outline:none;"
-            oninput="saveFundSettings();buildFund()">
+            oninput="saveAll();buildFund()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Benchmark Name</label>
           <input type="text" id="fundBenchmark" value="S&amp;P 500 (SPY ~5%)"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--sans);font-size:12px;padding:8px 10px;outline:none;"
-            oninput="saveFundSettings()">
+            oninput="saveAll()">
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Benchmark Yield (%)</label>
           <input type="number" id="fundBenchYield" value="1.3" step="0.1"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:14px;padding:8px 10px;outline:none;"
-            oninput="saveFundSettings();buildFund()">
+            oninput="saveAll();buildFund()">
         </div>
         <div style="border-top:1px solid var(--b1);padding-top:10px;">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px;">Fund Inception</div>
           <input type="date" id="fundInception"
             style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r6);color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;width:100%;"
-            oninput="saveFundSettings();buildFund()">
+            oninput="saveAll();buildFund()">
         </div>
       </div>
     </div>
@@ -1242,13 +1242,13 @@ function renderHoldings(){
     return `<tr>
       <td><div class="sn" title="${s.name}">${s.name}</div></td>
       <td class="r"><span class="sym-b">${s.symbol}</span></td>
-      <td class="r"><div class="si"><input type="number" value="${fmtN(s.shares)}" step="any" min="0" title="Edit shares" onchange="updateField(${s.id},'shares',parseFloat(this.value)||0)"></div></td>
+      <td class="r"><div class="si"><input type="number" value="${fmtN(s.shares)}" step="any" min="0" title="Edit shares" onchange="updateField(${s.id},'shares',parseFloat(this.value)||0);saveAll();"></div></td>
       <td class="r num neu">$${s.price.toFixed(2)}${liveDot}</td>
       <td class="r num neu">$${s.avgCost.toFixed(2)}</td>
       <td class="r num ${rc(s.totalReturn)}">${fmt(s.totalReturn)}</td>
       <td class="r num ${rc(s.returnPct)}">${fmtPct(s.returnPct)}</td>
       <td class="r num neu" style="display:flex;align-items:center;justify-content:flex-end;">${fmt(s.equity,0)}<span class="eq-bar"><span class="eq-bar-fill" style="width:${bw}%"></span></span></td>
-      <td class="r"><div class="yi"><input type="number" value="${s.yield.toFixed(1)}" step="0.1" min="0" max="50" title="Edit yield" onchange="updateField(${s.id},'yield',parseFloat(this.value)||0)"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+      <td class="r"><div class="yi"><input type="number" value="${s.yield.toFixed(1)}" step="0.1" min="0" max="50" title="Edit yield" onchange="updateField(${s.id},'yield',parseFloat(this.value)||0);saveAll()"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
       <td class="r num" style="color:var(--am)">${fmt(s.annDiv)}</td>
       <td class="r num neu">${fmt(s.monthDiv)}</td>
       <td class="r" style="white-space:nowrap;">
@@ -1266,6 +1266,7 @@ function updateField(id,field,val){
   if(!s)return;
   s[field]=val;
   calc(s);
+  saveAll();
   refreshAll();
 }
 
@@ -1274,6 +1275,7 @@ function removeHolding(id){
   if(!s)return;
   if(!confirm(`Remove ${s.name} (${s.symbol}) from portfolio?`))return;
   stocks=stocks.filter(x=>x.id!==id);
+  saveAll();
   refreshAll();
 }
 
@@ -1344,6 +1346,7 @@ function saveHolding(){
     stocks.push({id:nextId++,name,symbol,shares,price,avgCost,yield:yld,freq,divType,payMonths,priceIsLive:false});
   }
   closeModal();
+  saveAll();
   refreshAll();
 }
 
@@ -1719,23 +1722,26 @@ function showTab(t,btn){
 
 // ══════════════════ REFRESH ALL ══════════════════
 function refreshAll(){
-  calcAll();
-  updateTopBar();
-  renderHoldings();
-  buildDonut();
-  buildBar();
-  if(document.getElementById('tab-calendar').style.display!=='none')buildCalendar();
-  if(document.getElementById('tab-projection').style.display!=='none')buildProjection();
-  if(document.getElementById('tab-calculator').style.display!=='none'){runCalc();buildQuickStats();}
-  if(document.getElementById('tab-tax').style.display!=='none')runTax();
-  if(document.getElementById('tab-invest').style.display!=='none')runInvest();
-  if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
-  if(document.getElementById('tab-fund').style.display!=='none'){loadFundSettings();buildFund();}
-  if(document.getElementById('tab-explainer').style.display!=='none')buildExplainer();
-  if(document.getElementById('tab-roth').style.display!=='none')renderRoth();
-  // Persist after every refresh
+  // Wrap rendering in try-catch so a JS error never blocks the save
+  try{
+    calcAll();
+    updateTopBar();
+    renderHoldings();
+    buildDonut();
+    buildBar();
+    if(document.getElementById('tab-calendar').style.display!=='none')buildCalendar();
+    if(document.getElementById('tab-projection').style.display!=='none')buildProjection();
+    if(document.getElementById('tab-calculator').style.display!=='none'){runCalc();buildQuickStats();}
+    if(document.getElementById('tab-tax').style.display!=='none')runTax();
+    if(document.getElementById('tab-invest').style.display!=='none')runInvest();
+    if(document.getElementById('tab-staking').style.display!=='none')renderStaking();
+    if(document.getElementById('tab-fund').style.display!=='none'){try{loadFundSettings();buildFund();}catch(e){}}
+    if(document.getElementById('tab-explainer').style.display!=='none'){try{buildExplainer();}catch(e){}}
+    if(document.getElementById('tab-roth').style.display!=='none'){try{renderRoth();}catch(e){}}
+  }catch(e){ console.warn('refreshAll render error:', e); }
+  // Always save — even if a render threw
   savePortfolio();
-  saveTabSettings();
+  saveAll();
 }
 
 
@@ -1960,10 +1966,10 @@ function renderStaking(){
       <td class="r num neu">${s.amount.toLocaleString()}</td>
       <td class="r"><div class="yi"><input type="number" value="${s.usd.toFixed(2)}" step="0.01" min="0"
         style="width:80px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--bl);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
-        onchange="stakePositions.find(x=>x.id===${s.id}).usd=parseFloat(this.value)||0;renderStaking();saveStakeData();buildFund&&buildFund();"></div></td>
+        onchange="stakePositions.find(x=>x.id===${s.id}).usd=parseFloat(this.value)||0;saveAll();renderStaking();"></div></td>
       <td class="r"><div class="yi"><input type="number" value="${s.apy.toFixed(2)}" step="0.1" min="0"
         style="width:60px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--gr);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
-        onchange="stakePositions.find(x=>x.id===${s.id}).apy=parseFloat(this.value)||0;renderStaking();saveStakeData();"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+        onchange="stakePositions.find(x=>x.id===${s.id}).apy=parseFloat(this.value)||0;saveAll();renderStaking()"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
       <td class="r num" style="color:var(--am)">${fmt(wk)}</td>
       <td class="r num" style="color:var(--am)">${fmt(ann)}</td>
       <td class="r num" style="color:var(--tl)">${fmt(s.pending)}</td>
@@ -1999,7 +2005,7 @@ function openStakeModal(id=null){
   }
 }
 function closeStakeModal(){ document.getElementById('stakeModalOverlay').classList.remove('open'); stakeEditId=null; }
-function removeStake(id){ if(!confirm('Remove this staking position?'))return; stakePositions=stakePositions.filter(x=>x.id!==id); saveStakeData(); renderStaking(); }
+function removeStake(id){ if(!confirm('Remove this staking position?'))return; stakePositions=stakePositions.filter(x=>x.id!==id); saveAll(); renderStaking(); }
 function saveStake(){
   const proto=document.getElementById('sfProto').value.trim();
   const token=document.getElementById('sfToken').value.trim().toUpperCase();
@@ -2014,7 +2020,7 @@ function saveStake(){
   if(!proto||!token) return alert('Protocol and token are required.');
   if(stakeEditId){ Object.assign(stakePositions.find(x=>x.id===stakeEditId),{proto,token,amount,usd,apy,cycle,pending,share,rewards,notes}); }
   else { stakePositions.push({id:nextStakeId++,proto,token,amount,usd,apy,cycle,pending,share,rewards,notes}); }
-  closeStakeModal(); saveStakeData(); renderStaking();
+  closeStakeModal(); saveAll(); renderStaking();
 }
 
 // ══════════════════ FUND VIEW ══════════════════
@@ -2418,20 +2424,22 @@ function buildExplainer(){
 
 
 // ══════════════════ ROTH IRA ══════════════════
-const ROTH_KEY = 'roth_ira_v1';
+const ROTH_KEY = 'roth_ira_v3';
 let rothStocks = [
-  {id:1,  name:'Realty Income',               symbol:'O',    shares:6.01,    price:52.43, avgCost:51.47, totalReturn:5.77,  yield:5.8, freq:'M',  type:'reit'},
-  {id:2,  name:'Dow Jones ETF',               symbol:'DJIA', shares:1,       price:21.41, avgCost:21.89, totalReturn:-0.48, yield:1.2, freq:'Q',  type:'etf'},
-  {id:3,  name:'Vertiv Holdings',             symbol:'VRT',  shares:0.003953,price:115.32,avgCost:104.37,totalReturn:0.04,  yield:0.1, freq:'Q',  type:'growth'},
-  {id:4,  name:'Super Micro Computer',        symbol:'SMCI', shares:0.092309,price:31.84, avgCost:32.49, totalReturn:-0.06, yield:0.0, freq:'none',type:'growth'},
-  {id:5,  name:'NVIDIA',                      symbol:'NVDA', shares:0.005505,price:110.88,avgCost:108.67,totalReturn:0.01,  yield:0.0, freq:'Q',  type:'growth'},
-  {id:6,  name:'Palantir',                    symbol:'PLTR', shares:0.025248,price:91.14, avgCost:87.58, totalReturn:0.09,  yield:0.0, freq:'none',type:'growth'},
-  {id:7,  name:'Applied Digital',             symbol:'APLD', shares:0.885021,price:24.29, avgCost:23.94, totalReturn:0.31,  yield:0.0, freq:'none',type:'growth'},
-  {id:8,  name:'VICI Properties',             symbol:'VICI', shares:5,       price:28.56, avgCost:29.02, totalReturn:-2.29, yield:5.5, freq:'Q',  type:'reit'},
-  {id:9,  name:'Datavault AI',                symbol:'DTCR', shares:4,       price:24.97, avgCost:25.00, totalReturn:-0.12, yield:0.0, freq:'none',type:'growth'},
-  {id:10, name:'Ares Capital',                symbol:'ARCC', shares:7.01,    price:22.45, avgCost:21.86, totalReturn:0.41,  yield:9.2, freq:'Q',  type:'dividend'},
+  {id:1,  name:'Realty Income',               symbol:'O',    shares:6.01,    price:52.10, avgCost:51.47, totalReturn:3.77,  yield:5.8, freq:'M',  type:'reit'},
+  {id:2,  name:'Dow Jones ETF',               symbol:'DJIA', shares:1.72,    price:21.78, avgCost:22.01, totalReturn:-0.39, yield:1.2, freq:'Q',  type:'etf'},
+  {id:3,  name:'Vertiv Holdings',             symbol:'VRT',  shares:0.003953,price:127.51,avgCost:112.33,totalReturn:0.06,  yield:0.1, freq:'Q',  type:'growth'},
+  {id:4,  name:'Super Micro Computer',        symbol:'SMCI', shares:0.092309,price:29.56, avgCost:32.43, totalReturn:-0.08, yield:0.0, freq:'none',type:'growth'},
+  {id:5,  name:'NVIDIA',                      symbol:'NVDA', shares:0.005505,price:112.34,avgCost:110.52,totalReturn:0.01,  yield:0.0, freq:'Q',  type:'growth'},
+  {id:6,  name:'Palantir',                    symbol:'PLTR', shares:0.025248,price:95.47, avgCost:89.13, totalReturn:0.16,  yield:0.0, freq:'none',type:'growth'},
+  {id:7,  name:'Applied Digital',             symbol:'APLD', shares:0.885021,price:27.40, avgCost:24.83, totalReturn:0.50,  yield:0.0, freq:'none',type:'growth'},
+  {id:8,  name:'VICI Properties',             symbol:'VICI', shares:5,       price:28.92, avgCost:29.26, totalReturn:-1.72, yield:5.5, freq:'Q',  type:'reit'},
+  {id:9,  name:'Datavault AI',                symbol:'DTCR', shares:4.48,    price:25.42, avgCost:25.37, totalReturn:0.24,  yield:0.0, freq:'none',type:'growth'},
+  {id:10, name:'Ares Capital',                symbol:'ARCC', shares:10.01,   price:22.64, avgCost:22.24, totalReturn:3.98,  yield:9.2, freq:'Q',  type:'dividend'},
+  {id:11, name:'ProShares Bitcoin ETF',       symbol:'ETHB', shares:10,      price:30.08, avgCost:29.24, totalReturn:0.84,  yield:0.0, freq:'none',type:'etf'},
+  {id:12, name:'iShares Bitcoin Trust',       symbol:'IBIT', shares:1,       price:55.89, avgCost:55.97, totalReturn:-0.08, yield:0.0, freq:'none',type:'etf'},
 ];
-let nextRothId = 11;
+let nextRothId = 13;
 let rothEditId = null;
 let rothSortKey = 'equity', rothSortDir = -1;
 
@@ -2555,7 +2563,7 @@ function renderRoth(){
       <td><div class="sn" title="${s.name}">${s.name}</div></td>
       <td class="r"><span class="sym-b">${s.symbol}</span></td>
       <td class="r"><div class="si"><input type="number" value="${fmtN(s.shares)}" step="any" min="0"
-        onchange="rothStocks.find(x=>x.id===${s.id}).shares=parseFloat(this.value)||0;renderRoth();saveRothData();"></div></td>
+        onchange="rothStocks.find(x=>x.id===${s.id}).shares=parseFloat(this.value)||0;saveAll();renderRoth();"></div></td>
       <td class="r num neu">$${s.price.toFixed(2)}</td>
       <td class="r num neu">$${s.avgCost.toFixed(2)}</td>
       <td class="r num ${rc(s.totalReturn)}">${fmt(s.totalReturn)}</td>
@@ -2563,7 +2571,7 @@ function renderRoth(){
       <td class="r num neu" style="display:flex;align-items:center;justify-content:flex-end">${fmt(s.equity,0)}<span class="eq-bar"><span class="eq-bar-fill" style="width:${bw}%;background:var(--bl)"></span></span></td>
       <td class="r"><div class="yi"><input type="number" value="${s.yield.toFixed(1)}" step="0.1" min="0"
         style="width:54px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;color:var(--am);font-family:var(--mono);font-size:11px;padding:2px 5px;text-align:right;outline:none;"
-        onchange="rothStocks.find(x=>x.id===${s.id}).yield=parseFloat(this.value)||0;renderRoth();saveRothData();"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
+        onchange="rothStocks.find(x=>x.id===${s.id}).yield=parseFloat(this.value)||0;saveAll();renderRoth();"><span style="font-size:10px;color:var(--tx3)">%</span></div></td>
       <td class="r num" style="color:var(--am)">${s.annDiv>0?fmt(s.annDiv):'—'}</td>
       <td class="r"><span style="font-size:10px;font-weight:500;color:${tc2};background:${tc2.replace(')','-d)').replace('var(--','var(--')};padding:2px 7px;border-radius:3px;">${tl}</span></td>
       <td class="r" style="white-space:nowrap;">
@@ -2601,7 +2609,7 @@ function openRothModal(id=null){
   }
 }
 function closeRothModal(){ document.getElementById('rothModalOverlay').classList.remove('open'); rothEditId=null; }
-function removeRoth(id){ if(!confirm('Remove this Roth IRA holding?'))return; rothStocks=rothStocks.filter(x=>x.id!==id); renderRoth(); }
+function removeRoth(id){ if(!confirm('Remove this Roth IRA holding?'))return; rothStocks=rothStocks.filter(x=>x.id!==id); saveAll(); renderRoth(); }
 function saveRothHolding(){
   const name=document.getElementById('rfName').value.trim();
   const symbol=document.getElementById('rfSymbol').value.trim().toUpperCase();
@@ -2614,7 +2622,7 @@ function saveRothHolding(){
   if(!name||!symbol||!price) return alert('Name, symbol and price are required.');
   if(rothEditId){ Object.assign(rothStocks.find(x=>x.id===rothEditId),{name,symbol,shares,price,avgCost,yield:yld,type,freq}); }
   else { rothStocks.push({id:nextRothId++,name,symbol,shares,price,avgCost,yield:yld,type,freq}); }
-  closeRothModal(); renderRoth();
+  closeRothModal(); saveAll(); renderRoth();
 }
 
 // ══════════════════ BALANCE VISIBILITY ══════════════════
@@ -2628,6 +2636,187 @@ function toggleValuesVisible(){
   btn.style.borderColor = valuesVisible ? 'var(--b2)' : 'var(--bl)';
   btn.style.color = valuesVisible ? 'var(--tx2)' : 'var(--bl)';
 }
+
+// ══════════════════ MASTER PERSISTENCE ══════════════════
+// Single unified save — called after every mutation anywhere in the app
+const DB_KEY = 'dividend_tracker_db_v1';
+
+function saveAll(){
+  try{
+    const db = {
+      savedAt:   new Date().toISOString(),
+      version:   'v3',
+      stocks:    stocks.map(s=>({...s})),
+      nextId,
+      staking:   stakePositions.map(s=>({...s})),
+      nextStakeId,
+      roth:      rothStocks.map(s=>({...s})),
+      nextRothId,
+      fund: {
+        name:      (document.getElementById('fundName')?.value      || ''),
+        shares:    (document.getElementById('fundShares')?.value    || '1000'),
+        benchmark: (document.getElementById('fundBenchmark')?.value || ''),
+        benchYield:(document.getElementById('fundBenchYield')?.value|| '1.3'),
+        inception: (document.getElementById('fundInception')?.value || ''),
+      },
+      tabSettings: buildTabSettingsObj(),
+      apiKey: avApiKey,
+    };
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+    showSaveToast('✓ Saved');
+  }catch(e){ console.warn('saveAll failed:', e); }
+}
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(!raw) return false;
+    const db = JSON.parse(raw);
+    if(!db || (!db.stocks?.length && !db.roth?.length && !db.staking?.length)) return false;
+
+    if(db.stocks?.length)   { stocks          = db.stocks;   nextId       = db.nextId       || nextId; }
+    if(db.staking?.length)  { stakePositions  = db.staking;  nextStakeId  = db.nextStakeId  || nextStakeId; }
+    if(db.roth?.length)     { rothStocks      = db.roth;     nextRothId   = db.nextRothId   || nextRothId; }
+    if(db.apiKey)           { avApiKey = db.apiKey; }
+
+    // Fund settings — applied to DOM after render
+    if(db.fund) window._pendingFundSettings = db.fund;
+
+    // Tab settings
+    if(db.tabSettings) window._pendingTabSettings = db.tabSettings;
+
+    return true;
+  }catch(e){ console.warn('loadAll failed:', e); return false; }
+}
+
+function applyPendingSettings(){
+  if(window._pendingFundSettings){
+    const f = window._pendingFundSettings;
+    const set = (id,v) => { const el=document.getElementById(id); if(el&&v!=null) el.value=v; };
+    set('fundName',f.name); set('fundShares',f.shares);
+    set('fundBenchmark',f.benchmark); set('fundBenchYield',f.benchYield);
+    set('fundInception',f.inception);
+    window._pendingFundSettings = null;
+  }
+  if(window._pendingTabSettings){
+    applyTabSettings(window._pendingTabSettings);
+    window._pendingTabSettings = null;
+  }
+  if(avApiKey){
+    const el = document.getElementById('avApiKey');
+    if(el) el.value = avApiKey;
+  }
+}
+
+function buildTabSettingsObj(){
+  const g = (id) => document.getElementById(id)?.value ?? null;
+  const tog = (id) => document.getElementById(id)?.classList.contains('on') ?? true;
+  return {
+    projYears:g('rYrs'), projContrib:g('rCon'), projGrowth:g('rGr'), projDivGrow:g('rDG'),
+    projDrip:tog('dripTog'), projContribOn:tog('conTog'),
+    ci1:g('ci1'),ci2:g('ci2'),ci3:g('ci3'),ci4:g('ci4'),ci5:g('ci5'),ci6:g('ci6'),ci7:g('ci7'),
+    calcDrip:tog('calcDrip'),
+    txStatus:g('txStatus'),txIncome:g('txIncome'),txState:g('txState'),
+    txQual:g('txQual'),txROC:g('txROC'),txIncSrc:g('txIncSrc'),txCustom:g('txCustom'),
+    invAmount:g('invAmount'),invStrategy:g('invStrategy'),invCustomPcts:customPcts,
+  };
+}
+
+function applyTabSettings(s){
+  const set = (id,val) => { const el=document.getElementById(id); if(el&&val!=null) el.value=val; };
+  const setTog = (id,on) => { const el=document.getElementById(id); if(el&&on!=null){ el.classList.toggle('on',on); } };
+  if(s.projYears  !=null){ set('rYrs',s.projYears);   const e=document.getElementById('pYrs'); if(e)e.textContent=s.projYears; }
+  if(s.projContrib!=null){ set('rCon',s.projContrib); const e=document.getElementById('pCon'); if(e)e.textContent=Number(s.projContrib).toLocaleString(); }
+  if(s.projGrowth !=null){ set('rGr', s.projGrowth);  const e=document.getElementById('pGr');  if(e)e.textContent=parseFloat(s.projGrowth).toFixed(1); }
+  if(s.projDivGrow!=null){ set('rDG', s.projDivGrow); const e=document.getElementById('pDG');  if(e)e.textContent=parseFloat(s.projDivGrow).toFixed(1); }
+  setTog('dripTog',s.projDrip); setTog('conTog',s.projContribOn);
+  set('ci1',s.ci1);set('ci2',s.ci2);set('ci3',s.ci3);set('ci4',s.ci4);
+  set('ci5',s.ci5);set('ci6',s.ci6);set('ci7',s.ci7);
+  setTog('calcDrip',s.calcDrip);
+  set('txStatus',s.txStatus);set('txIncome',s.txIncome);set('txState',s.txState);
+  set('txQual',s.txQual);set('txROC',s.txROC);set('txIncSrc',s.txIncSrc);set('txCustom',s.txCustom);
+  if(s.txIncSrc==='custom'){ const r=document.getElementById('txCustomRow'); if(r)r.style.display=''; }
+  set('invAmount',s.invAmount);set('invStrategy',s.invStrategy);
+  if(s.invCustomPcts) customPcts=s.invCustomPcts;
+}
+
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportData(){
+  saveAll();
+  const raw = localStorage.getItem(DB_KEY);
+  if(!raw){ alert('Nothing to export yet.'); return; }
+  const blob = new Blob([raw], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'dividend-portfolio-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showSaveToast('✓ Exported');
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const db = JSON.parse(e.target.result);
+      // Support old multi-key format
+      if(!db.stocks && db.portfolio?.stocks){
+        db.stocks   = db.portfolio.stocks;
+        db.staking  = db.staking?.positions  || db.portfolio?.staking?.positions  || [];
+        db.roth     = db.roth?.stocks        || db.portfolio?.roth?.stocks        || [];
+        if(db.fund?.name == null && db.portfolio?.fund) db.fund = db.portfolio.fund;
+      }
+      if(!db.stocks?.length && !db.roth?.length)
+        throw new Error('No recognizable portfolio data found.');
+      if(!confirm('Import this backup? Current data will be replaced.')) return;
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      showSaveToast('✓ Imported — reloading…');
+      setTimeout(()=>location.reload(), 1000);
+    }catch(err){ alert('Import failed: '+err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// Keep old individual save fns as no-ops that delegate to saveAll
+// so any code still calling them works fine
+function savePortfolio(){ saveAll(); }
+function saveStakeData(){ saveAll(); }
+function saveRothData(){  saveAll(); }
+function saveFundSettings(){ saveAll(); }
+function saveAll(){ saveAll(); }
+function saveApiKey(val){ avApiKey=val.trim(); saveAll(); }
+function loadPortfolio(){ return false; } // replaced by loadAll
+function loadStakeData(){} 
+function loadFundSettings(){}
+function loadTabSettings(){}
+function loadApiKey(){
+  try{ const k=localStorage.getItem('av_api_key'); if(k) avApiKey=k; }catch(e){}
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showSaveToast(msg){
+  let t=document.getElementById('saveToast');
+  if(!t){
+    t=document.createElement('div'); t.id='saveToast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;padding:9px 16px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg||'✓ Saved';
+  t.style.opacity='1';
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.style.opacity='0', 1800);
+}
+
+function resetPortfolio(){
+  if(!confirm('Reset ALL data to defaults? This cannot be undone.')) return;
+  localStorage.removeItem(DB_KEY);
+  location.reload();
+}
+
 
 // ══════════════════ EXPORT / IMPORT ══════════════════
 function exportData(){
@@ -2679,48 +2868,7 @@ function importData(event){
 // ══════════════════ PERSISTENCE ══════════════════
 const STORAGE_KEY = 'dividend_portfolio_v1';
 
-function savePortfolio(){
-  try{
-    const data = {
-      stocks: stocks.map(s => ({...s})),
-      nextId,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    showSaveToast();
-  }catch(e){ console.warn('Save failed:', e); }
-}
-
-function loadPortfolio(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return false;
-    const data = JSON.parse(raw);
-    if(data?.stocks?.length){
-      stocks = data.stocks;
-      nextId = data.nextId || (Math.max(...stocks.map(s=>s.id)) + 1);
-      return true;
-    }
-  }catch(e){ console.warn('Load failed:', e); }
-  return false;
-}
-
-function resetPortfolio(){
-  if(!confirm('Reset portfolio to original data? This cannot be undone.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
-}
-
-function showSaveToast(msg){
-  let t = document.getElementById('saveToast');
-  if(!t){ t = document.createElement('div'); t.id='saveToast';
-    t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;padding:10px 18px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;';
-    document.body.appendChild(t); }
-  t.textContent = msg || '✓ Portfolio saved';
-  t.style.opacity = '1';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.style.opacity='0', 2000);
-}
+// (old savePortfolio/loadPortfolio replaced by unified saveAll/loadAll above)
 
 
 
@@ -2728,7 +2876,7 @@ function showSaveToast(msg){
 // ══════════════════ TAB SETTINGS PERSISTENCE ══════════════════
 const SETTINGS_KEY = 'dividend_tab_settings_v1';
 
-function saveTabSettings(){
+function saveAll(){
   try{
     const s = {
       // Projection
@@ -2803,26 +2951,23 @@ function loadTabSettings(){
 }
 
 // Patch all tab-level functions to also save settings
-function _wrapWithSave(fn){ return function(){ fn.apply(this, arguments); saveTabSettings(); }; }
+function _wrapWithSave(fn){ return function(){ fn.apply(this, arguments); saveAll(); }; }
 
 // ══════════════════ INIT ══════════════════
-loadApiKey();
-loadStakeData();
-const didLoad = loadPortfolio();
-loadTabSettings();
-loadFundSettings();
-// Show last saved time in price bar if data was restored
-if(didLoad){
+const _loaded = loadAll();
+applyPendingSettings();
+if(_loaded){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const data = JSON.parse(raw);
-    if(data?.savedAt){
-      const d = new Date(data.savedAt);
-      document.getElementById('priceStatus').textContent = 'Portfolio restored from ' + d.toLocaleDateString() + ' at ' + d.toLocaleTimeString();
+    const raw = localStorage.getItem(DB_KEY);
+    const db  = JSON.parse(raw);
+    if(db?.savedAt){
+      const d = new Date(db.savedAt);
+      document.getElementById('priceStatus').textContent = 'Portfolio restored — saved '+d.toLocaleDateString()+' '+d.toLocaleTimeString();
     }
   }catch(e){}
 }
 calcAll();
+calcAllRoth();
 updateTopBar();
 renderHoldings();
 buildDonut();
@@ -2830,6 +2975,7 @@ buildBar();
 seedCalcYield();
 renderStaking();
 renderRoth();
+if(!_loaded) saveAll(); // first-ever load — persist defaults
 tryAutoReconnect();
 </script>
 </body>
