@@ -6,6 +6,8 @@
 <title>Dividend Portfolio Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -2637,56 +2639,97 @@ function toggleValuesVisible(){
   btn.style.color = valuesVisible ? 'var(--tx2)' : 'var(--bl)';
 }
 
-// ══════════════════ MASTER PERSISTENCE ══════════════════
-// Single unified save — called after every mutation anywhere in the app
-const DB_KEY = 'dividend_tracker_db_v1';
+// ══════════════════ FIREBASE PERSISTENCE ══════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBVw1-7YGl-X6_elaUje2FFE3CsLD4MBM0",
+  authDomain:        "dividend-tracker-490519.firebaseapp.com",
+  projectId:         "dividend-tracker-490519",
+  storageBucket:     "dividend-tracker-490519.firebasestorage.app",
+  messagingSenderId: "464263513338",
+  appId:             "1:464263513338:web:63180292c2db103ccbf543"
+};
 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC = db.collection('portfolio').doc('data');
+
+let _saveTimer = null;
+let _fbReady = false;
+
+// Debounced save — waits 800ms after last change then writes once
 function saveAll(){
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(_doSave, 800);
+}
+
+async function _doSave(){
   try{
-    const db = {
-      savedAt:   new Date().toISOString(),
-      version:   'v3',
-      stocks:    stocks.map(s=>({...s})),
+    const payload = {
+      savedAt:    new Date().toISOString(),
+      stocks:     stocks.map(s=>({...s})),
       nextId,
-      staking:   stakePositions.map(s=>({...s})),
+      staking:    stakePositions.map(s=>({...s})),
       nextStakeId,
-      roth:      rothStocks.map(s=>({...s})),
+      roth:       rothStocks.map(s=>({...s})),
       nextRothId,
       fund: {
-        name:      (document.getElementById('fundName')?.value      || ''),
-        shares:    (document.getElementById('fundShares')?.value    || '1000'),
-        benchmark: (document.getElementById('fundBenchmark')?.value || ''),
-        benchYield:(document.getElementById('fundBenchYield')?.value|| '1.3'),
-        inception: (document.getElementById('fundInception')?.value || ''),
+        name:       document.getElementById('fundName')?.value      || '',
+        shares:     document.getElementById('fundShares')?.value    || '1000',
+        benchmark:  document.getElementById('fundBenchmark')?.value || '',
+        benchYield: document.getElementById('fundBenchYield')?.value|| '1.3',
+        inception:  document.getElementById('fundInception')?.value || '',
       },
       tabSettings: buildTabSettingsObj(),
       apiKey: avApiKey,
     };
-    localStorage.setItem(DB_KEY, JSON.stringify(db));
-    showSaveToast('✓ Saved');
-  }catch(e){ console.warn('saveAll failed:', e); }
+    await DOC.set(payload);
+    showSaveToast('☁ Saved to cloud');
+  }catch(e){
+    console.warn('Firebase save failed:', e);
+    // Fallback to localStorage
+    try{ localStorage.setItem('dividend_tracker_backup', JSON.stringify({savedAt:new Date().toISOString(),stocks,staking:stakePositions,roth:rothStocks})); }catch(le){}
+    showSaveToast('⚠ Cloud save failed — local backup saved');
+  }
 }
 
-function loadAll(){
+async function loadAll(){
+  // Show loading indicator
+  document.getElementById('priceStatus').textContent = '☁ Loading from cloud…';
   try{
-    const raw = localStorage.getItem(DB_KEY);
-    if(!raw) return false;
-    const db = JSON.parse(raw);
-    if(!db || (!db.stocks?.length && !db.roth?.length && !db.staking?.length)) return false;
-
-    if(db.stocks?.length)   { stocks          = db.stocks;   nextId       = db.nextId       || nextId; }
-    if(db.staking?.length)  { stakePositions  = db.staking;  nextStakeId  = db.nextStakeId  || nextStakeId; }
-    if(db.roth?.length)     { rothStocks      = db.roth;     nextRothId   = db.nextRothId   || nextRothId; }
-    if(db.apiKey)           { avApiKey = db.apiKey; }
-
-    // Fund settings — applied to DOM after render
-    if(db.fund) window._pendingFundSettings = db.fund;
-
-    // Tab settings
-    if(db.tabSettings) window._pendingTabSettings = db.tabSettings;
-
+    const snap = await DOC.get();
+    if(!snap.exists){
+      document.getElementById('priceStatus').textContent = 'No cloud data yet — defaults loaded. Make any change to save.';
+      _fbReady = true;
+      return false;
+    }
+    const db2 = snap.data();
+    if(db2.stocks?.length)  { stocks         = db2.stocks;  nextId      = db2.nextId      || nextId; }
+    if(db2.staking?.length) { stakePositions = db2.staking; nextStakeId = db2.nextStakeId || nextStakeId; }
+    if(db2.roth?.length)    { rothStocks     = db2.roth;    nextRothId  = db2.nextRothId  || nextRothId; }
+    if(db2.apiKey)          { avApiKey = db2.apiKey; }
+    if(db2.fund)            { window._pendingFundSettings = db2.fund; }
+    if(db2.tabSettings)     { window._pendingTabSettings  = db2.tabSettings; }
+    const d = new Date(db2.savedAt);
+    document.getElementById('priceStatus').textContent = '☁ Cloud data loaded — saved '+d.toLocaleDateString()+' '+d.toLocaleTimeString();
+    _fbReady = true;
     return true;
-  }catch(e){ console.warn('loadAll failed:', e); return false; }
+  }catch(e){
+    console.warn('Firebase load failed:', e);
+    document.getElementById('priceStatus').textContent = '⚠ Cloud unavailable — check internet connection';
+    // Try localStorage backup
+    try{
+      const raw = localStorage.getItem('dividend_tracker_backup');
+      if(raw){
+        const d = JSON.parse(raw);
+        if(d.stocks?.length)  stocks         = d.stocks;
+        if(d.staking?.length) stakePositions = d.staking;
+        if(d.roth?.length)    rothStocks     = d.roth;
+        showSaveToast('⚠ Using local backup');
+      }
+    }catch(le){}
+    _fbReady = true;
+    return false;
+  }
 }
 
 function applyPendingSettings(){
@@ -2702,18 +2745,15 @@ function applyPendingSettings(){
     applyTabSettings(window._pendingTabSettings);
     window._pendingTabSettings = null;
   }
-  if(avApiKey){
-    const el = document.getElementById('avApiKey');
-    if(el) el.value = avApiKey;
-  }
+  if(avApiKey){ const el=document.getElementById('avApiKey'); if(el) el.value=avApiKey; }
 }
 
 function buildTabSettingsObj(){
-  const g = (id) => document.getElementById(id)?.value ?? null;
-  const tog = (id) => document.getElementById(id)?.classList.contains('on') ?? true;
+  const g=(id)=>document.getElementById(id)?.value??null;
+  const tog=(id)=>document.getElementById(id)?.classList.contains('on')??true;
   return {
-    projYears:g('rYrs'), projContrib:g('rCon'), projGrowth:g('rGr'), projDivGrow:g('rDG'),
-    projDrip:tog('dripTog'), projContribOn:tog('conTog'),
+    projYears:g('rYrs'),projContrib:g('rCon'),projGrowth:g('rGr'),projDivGrow:g('rDG'),
+    projDrip:tog('dripTog'),projContribOn:tog('conTog'),
     ci1:g('ci1'),ci2:g('ci2'),ci3:g('ci3'),ci4:g('ci4'),ci5:g('ci5'),ci6:g('ci6'),ci7:g('ci7'),
     calcDrip:tog('calcDrip'),
     txStatus:g('txStatus'),txIncome:g('txIncome'),txState:g('txState'),
@@ -2723,36 +2763,100 @@ function buildTabSettingsObj(){
 }
 
 function applyTabSettings(s){
-  const set = (id,val) => { const el=document.getElementById(id); if(el&&val!=null) el.value=val; };
-  const setTog = (id,on) => { const el=document.getElementById(id); if(el&&on!=null){ el.classList.toggle('on',on); } };
-  if(s.projYears  !=null){ set('rYrs',s.projYears);   const e=document.getElementById('pYrs'); if(e)e.textContent=s.projYears; }
-  if(s.projContrib!=null){ set('rCon',s.projContrib); const e=document.getElementById('pCon'); if(e)e.textContent=Number(s.projContrib).toLocaleString(); }
-  if(s.projGrowth !=null){ set('rGr', s.projGrowth);  const e=document.getElementById('pGr');  if(e)e.textContent=parseFloat(s.projGrowth).toFixed(1); }
-  if(s.projDivGrow!=null){ set('rDG', s.projDivGrow); const e=document.getElementById('pDG');  if(e)e.textContent=parseFloat(s.projDivGrow).toFixed(1); }
-  setTog('dripTog',s.projDrip); setTog('conTog',s.projContribOn);
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};
+  const setTog=(id,on)=>{const el=document.getElementById(id);if(el&&on!=null)el.classList.toggle('on',on);};
+  if(s.projYears  !=null){set('rYrs',s.projYears);  const e=document.getElementById('pYrs');if(e)e.textContent=s.projYears;}
+  if(s.projContrib!=null){set('rCon',s.projContrib);const e=document.getElementById('pCon');if(e)e.textContent=Number(s.projContrib).toLocaleString();}
+  if(s.projGrowth !=null){set('rGr', s.projGrowth); const e=document.getElementById('pGr'); if(e)e.textContent=parseFloat(s.projGrowth).toFixed(1);}
+  if(s.projDivGrow!=null){set('rDG', s.projDivGrow);const e=document.getElementById('pDG'); if(e)e.textContent=parseFloat(s.projDivGrow).toFixed(1);}
+  setTog('dripTog',s.projDrip);setTog('conTog',s.projContribOn);
   set('ci1',s.ci1);set('ci2',s.ci2);set('ci3',s.ci3);set('ci4',s.ci4);
-  set('ci5',s.ci5);set('ci6',s.ci6);set('ci7',s.ci7);
-  setTog('calcDrip',s.calcDrip);
+  set('ci5',s.ci5);set('ci6',s.ci6);set('ci7',s.ci7);setTog('calcDrip',s.calcDrip);
   set('txStatus',s.txStatus);set('txIncome',s.txIncome);set('txState',s.txState);
   set('txQual',s.txQual);set('txROC',s.txROC);set('txIncSrc',s.txIncSrc);set('txCustom',s.txCustom);
-  if(s.txIncSrc==='custom'){ const r=document.getElementById('txCustomRow'); if(r)r.style.display=''; }
+  if(s.txIncSrc==='custom'){const r=document.getElementById('txCustomRow');if(r)r.style.display='';}
   set('invAmount',s.invAmount);set('invStrategy',s.invStrategy);
-  if(s.invCustomPcts) customPcts=s.invCustomPcts;
+  if(s.invCustomPcts)customPcts=s.invCustomPcts;
 }
 
 // ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
 function exportData(){
-  saveAll();
-  const raw = localStorage.getItem(DB_KEY);
-  if(!raw){ alert('Nothing to export yet.'); return; }
-  const blob = new Blob([raw], {type:'application/json'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'dividend-portfolio-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
+  const payload={
+    savedAt:new Date().toISOString(),version:'v3',
+    stocks,nextId,staking:stakePositions,nextStakeId,
+    roth:rothStocks,nextRothId,apiKey:avApiKey,
+    fund:{
+      name:document.getElementById('fundName')?.value||'',
+      shares:document.getElementById('fundShares')?.value||'1000',
+      benchmark:document.getElementById('fundBenchmark')?.value||'',
+      benchYield:document.getElementById('fundBenchYield')?.value||'1.3',
+      inception:document.getElementById('fundInception')?.value||'',
+    },
+    tabSettings:buildTabSettingsObj(),
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='dividend-portfolio-'+new Date().toISOString().slice(0,10)+'.json';a.click();
   URL.revokeObjectURL(url);
   showSaveToast('✓ Exported');
+}
+
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!d.stocks?.length&&!d.roth?.length)throw new Error('No portfolio data found.');
+      if(!confirm('Import this backup? Current cloud data will be replaced.'))return;
+      if(d.stocks?.length) {stocks=d.stocks;nextId=d.nextId||nextId;}
+      if(d.staking?.length){stakePositions=d.staking;nextStakeId=d.nextStakeId||nextStakeId;}
+      if(d.roth?.length)   {rothStocks=d.roth;nextRothId=d.nextRothId||nextRothId;}
+      if(d.apiKey)          avApiKey=d.apiKey;
+      if(d.fund)            window._pendingFundSettings=d.fund;
+      if(d.tabSettings)     window._pendingTabSettings=d.tabSettings;
+      saveAll();
+      setTimeout(()=>location.reload(),1200);
+    }catch(err){alert('Import failed: '+err.message);}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+// Stubs so existing code that calls old fn names still works
+function savePortfolio()  { saveAll(); }
+function saveStakeData()  { saveAll(); }
+function saveRothData()   { saveAll(); }
+function saveFundSettings(){ saveAll(); }
+function saveTabSettings() { saveAll(); }
+function saveApiKey(val)  { avApiKey=val.trim(); saveAll(); }
+function loadPortfolio()  { return false; }
+function loadStakeData()  {}
+function loadFundSettings(){}
+function loadTabSettings() {}
+function loadApiKey()     { try{const k=localStorage.getItem('av_api_key');if(k)avApiKey=k;}catch(e){} }
+
+function showSaveToast(msg){
+  let t=document.getElementById('saveToast');
+  if(!t){t=document.createElement('div');t.id='saveToast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:#2ecc71;color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;padding:9px 16px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;';
+    document.body.appendChild(t);}
+  t.textContent=msg||'☁ Saved';t.style.opacity='1';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500);
+}
+
+function resetPortfolio(){
+  if(!confirm('Reset ALL data to defaults and clear cloud? This cannot be undone.'))return;
+  DOC.delete().then(()=>{ localStorage.clear(); location.reload(); }).catch(()=>{ localStorage.clear(); location.reload(); });
+}
+
+
+
+// ══════════════════ MASTER PERSISTENCE ══════════════════
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────────
+function exportData(){
+  // delegates to the Firebase exportData above
+  _firebaseExport();
 }
 
 function importData(event){
@@ -2772,8 +2876,7 @@ function importData(event){
       if(!db.stocks?.length && !db.roth?.length)
         throw new Error('No recognizable portfolio data found.');
       if(!confirm('Import this backup? Current data will be replaced.')) return;
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
-      showSaveToast('✓ Imported — reloading…');
+      showSaveToast('✓ Imported — saving to cloud…');
       setTimeout(()=>location.reload(), 1000);
     }catch(err){ alert('Import failed: '+err.message); }
   };
@@ -2813,7 +2916,6 @@ function showSaveToast(msg){
 
 function resetPortfolio(){
   if(!confirm('Reset ALL data to defaults? This cannot be undone.')) return;
-  localStorage.removeItem(DB_KEY);
   location.reload();
 }
 
@@ -2954,29 +3056,21 @@ function loadTabSettings(){
 function _wrapWithSave(fn){ return function(){ fn.apply(this, arguments); saveAll(); }; }
 
 // ══════════════════ INIT ══════════════════
-const _loaded = loadAll();
-applyPendingSettings();
-if(_loaded){
-  try{
-    const raw = localStorage.getItem(DB_KEY);
-    const db  = JSON.parse(raw);
-    if(db?.savedAt){
-      const d = new Date(db.savedAt);
-      document.getElementById('priceStatus').textContent = 'Portfolio restored — saved '+d.toLocaleDateString()+' '+d.toLocaleTimeString();
-    }
-  }catch(e){}
-}
-calcAll();
-calcAllRoth();
-updateTopBar();
-renderHoldings();
-buildDonut();
-buildBar();
-seedCalcYield();
-renderStaking();
-renderRoth();
-if(!_loaded) saveAll(); // first-ever load — persist defaults
-tryAutoReconnect();
+(async () => {
+  const _loaded = await loadAll();
+  applyPendingSettings();
+  calcAll();
+  calcAllRoth();
+  updateTopBar();
+  renderHoldings();
+  buildDonut();
+  buildBar();
+  seedCalcYield();
+  renderStaking();
+  renderRoth();
+  if(!_loaded) saveAll(); // first-ever load — saves defaults to cloud
+  tryAutoReconnect();
+})();
 </script>
 </body>
 </html>
